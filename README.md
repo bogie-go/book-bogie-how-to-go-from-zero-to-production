@@ -13,7 +13,11 @@ git clone git@github.com:bogie-go/book-bogie-how-to-go-from-zero-to-production.g
 cd book-bogie-how-to-go-from-zero-to-production/ch07-show-our-merch
 ```
 
-Each chapter folder has its own README. The code is being added now, so some folders are still placeholders.
+Each chapter folder has its own README with how to run that chapter's code.
+
+Chapters 2–5 are small standalone Go examples (with `checkpoints/` for intermediate steps). Chapters 6–20 are full Bogie Depot snapshots at the end of each chapter. Chapters 1 and 21–23 are README only (no code in those chapters).
+
+Book feedback from building this repo lives in [`BOOK-ISSUES.md`](BOOK-ISSUES.md).
 
 ## Chapters
 
