@@ -17,7 +17,7 @@ Each chapter folder has its own README with how to run that chapter's code.
 
 Chapters 2–5 are small standalone Go examples (with `checkpoints/` for intermediate steps). Chapters 6–20 are full Bogie Depot snapshots at the end of each chapter. Chapters 1 and 21–23 are README only (no code in those chapters).
 
-Book feedback from building this repo lives in [`BOOK-ISSUES.md`](BOOK-ISSUES.md).
+Product images (one master copy, same files in every chapter): [`images/`](images/). Book feedback from building this repo lives in [`BOOK-ISSUES.md`](BOOK-ISSUES.md).
 
 ## Chapters
 
