@@ -1,0 +1,239 @@
+// Package migrate applies the schema depot owns.
+//
+// Running the migrations at boot rather than as a separate deploy step is
+// deliberate: the schema and the binary that expects it ship in the same
+// image, so there is no window in which a container serves traffic against a
+// schema it was not built for. Config can turn it off
+// (DATABASE_MIGRATE_AT_BOOT=false) for a deployment that migrates from
+// one place on purpose.
+package migrate
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+	"io/fs"
+	"log/slog"
+	"strings"
+	"time"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/jackc/pgx/v5/stdlib" // database/sql driver for goose
+	"github.com/pressly/goose/v3"
+	"github.com/riverqueue/river/riverdriver/riverpgxv5"
+	"github.com/riverqueue/river/rivermigrate"
+
+	"depot/db"
+)
+
+const migrationsTable = "goose_db_version"
+
+// bootTimeout bounds a migration run. A boot-time migration must not hang a
+// deploy indefinitely: if goose's advisory lock is still held after this
+// long, something is wrong and failing loudly beats waiting silently.
+const bootTimeout = 2 * time.Minute
+
+// provider opens a connection and a goose provider over the embedded
+// migrations. Separate from the pool the server uses: this runs before it
+// exists, or instead of it.
+func provider(databaseURL string) (*goose.Provider, *sql.DB, error) {
+	fsys, err := fs.Sub(db.Migrations, "migrate")
+	if err != nil {
+		return nil, nil, fmt.Errorf("migrate: %w", err)
+	}
+	conn, err := sql.Open("pgx", databaseURL)
+	if err != nil {
+		return nil, nil, fmt.Errorf("migrate: open: %w", err)
+	}
+	p, err := goose.NewProvider(goose.DialectPostgres, conn, fsys, goose.WithTableName(migrationsTable))
+	if err != nil {
+		_ = conn.Close()
+		return nil, nil, fmt.Errorf("migrate: provider: %w", err)
+	}
+	return p, conn, nil
+}
+
+// nothingToDo reports goose's "no migrations found", which for an app that
+// has not written its first migration yet is not a fault: there is simply
+// nothing to apply.
+func nothingToDo(err error) bool { return errors.Is(err, goose.ErrNoMigrations) }
+
+// upError wraps a failed Up. goose names an out-of-order migration (one older
+// than the newest applied) but not the way out, so this says it.
+func upError(err error) error {
+	if strings.Contains(err.Error(), "out-of-order") {
+		return fmt.Errorf("migrate: up: %w: a migration file is older than the newest one already applied; "+
+			"rename the new file with a timestamp after it (only if no other database has applied it yet)", err)
+	}
+	return fmt.Errorf("migrate: up: %w", err)
+}
+
+// Run applies every pending migration.
+//
+// goose takes a Postgres advisory lock for the duration, so this stays correct
+// when several containers boot at once: the second waits, then finds nothing
+// to do, rather than racing the first through the same CREATE TABLE.
+func Run(ctx context.Context, databaseURL string, log *slog.Logger) error {
+	ctx, cancel := context.WithTimeout(ctx, bootTimeout)
+	defer cancel()
+	if err := riverSchema(ctx, databaseURL, log); err != nil {
+		return err
+	}
+	p, conn, err := provider(databaseURL)
+	if nothingToDo(err) {
+		log.InfoContext(ctx, "schema: nothing to apply", "dir", "migrate")
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	defer func() { _ = conn.Close() }()
+
+	before, err := p.GetDBVersion(ctx)
+	if err != nil {
+		return fmt.Errorf("migrate: version: %w", err)
+	}
+	if _, err := p.Up(ctx); err != nil {
+		return upError(err)
+	}
+	after, err := p.GetDBVersion(ctx)
+	if err != nil {
+		return fmt.Errorf("migrate: version after: %w", err)
+	}
+	if before == after {
+		log.InfoContext(ctx, "schema up to date", "version", after)
+	} else {
+		log.InfoContext(ctx, "schema applied", "from", before, "to", after)
+	}
+	return nil
+}
+
+// riverSchema applies River's own tables. River versions its schema itself,
+// in river_migration, and ships the SQL with the library, so applying it here
+// rather than copying it into db/migrate means a River upgrade brings its
+// schema change with it.
+func riverSchema(ctx context.Context, databaseURL string, log *slog.Logger) error {
+	pool, err := pgxpool.New(ctx, databaseURL)
+	if err != nil {
+		return fmt.Errorf("migrate: river: open: %w", err)
+	}
+	defer pool.Close()
+
+	m, err := rivermigrate.New(riverpgxv5.New(pool), nil)
+	if err != nil {
+		return fmt.Errorf("migrate: river: %w", err)
+	}
+	res, err := m.Migrate(ctx, rivermigrate.DirectionUp, nil)
+	if err != nil {
+		return fmt.Errorf("migrate: river schema: %w", err)
+	}
+	if len(res.Versions) > 0 {
+		log.InfoContext(ctx, "river schema applied", "versions", len(res.Versions))
+	}
+	return nil
+}
+
+// Down rolls back the most recent migration.
+//
+// Destructive by nature: migrations drop tables on the way down. The caller is
+// responsible for having said so explicitly.
+func Down(ctx context.Context, databaseURL string, log *slog.Logger) error {
+	p, conn, err := provider(databaseURL)
+	if nothingToDo(err) {
+		log.InfoContext(ctx, "nothing to roll back", "dir", "migrate")
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	defer func() { _ = conn.Close() }()
+
+	before, err := p.GetDBVersion(ctx)
+	if err != nil {
+		return fmt.Errorf("migrate: version: %w", err)
+	}
+	if before == 0 {
+		log.InfoContext(ctx, "nothing to roll back", "version", 0)
+		return nil
+	}
+	if _, err := p.Down(ctx); err != nil {
+		return fmt.Errorf("migrate: down: %w", err)
+	}
+	after, err := p.GetDBVersion(ctx)
+	if err != nil {
+		return fmt.Errorf("migrate: version after: %w", err)
+	}
+	log.InfoContext(ctx, "schema rolled back", "from", before, "to", after)
+	return nil
+}
+
+// DownTo rolls the schema back until it is at version, which may be 0.
+func DownTo(ctx context.Context, databaseURL string, version int64, log *slog.Logger) error {
+	p, conn, err := provider(databaseURL)
+	if nothingToDo(err) {
+		log.InfoContext(ctx, "nothing to roll back", "dir", "migrate")
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	defer func() { _ = conn.Close() }()
+
+	before, err := p.GetDBVersion(ctx)
+	if err != nil {
+		return fmt.Errorf("migrate: version: %w", err)
+	}
+	if _, err := p.DownTo(ctx, version); err != nil {
+		return fmt.Errorf("migrate: down-to %d: %w", version, err)
+	}
+	log.InfoContext(ctx, "schema rolled back", "from", before, "to", version)
+	return nil
+}
+
+// Status prints which migrations have run and which are pending.
+func Status(ctx context.Context, databaseURL string) error {
+	p, conn, err := provider(databaseURL)
+	if nothingToDo(err) {
+		fmt.Println("no migrations yet: bogie g migration create_<table> ... writes the first")
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	defer func() { _ = conn.Close() }()
+
+	statuses, err := p.Status(ctx)
+	if err != nil {
+		return fmt.Errorf("migrate: status: %w", err)
+	}
+	fmt.Printf("%-10s  %-22s  %s\n", "state", "applied at", "migration")
+	for _, s := range statuses {
+		applied := "pending"
+		state := "pending"
+		if s.State == goose.StateApplied {
+			applied = s.AppliedAt.Local().Format("2006-01-02 15:04:05")
+			state = "applied"
+		}
+		fmt.Printf("%-10s  %-22s  %s\n", state, applied, s.Source.Path)
+	}
+	return nil
+}
+
+// Version returns the current schema version.
+func Version(ctx context.Context, databaseURL string) (int64, error) {
+	p, conn, err := provider(databaseURL)
+	if nothingToDo(err) {
+		return 0, nil
+	}
+	if err != nil {
+		return 0, err
+	}
+	defer func() { _ = conn.Close() }()
+
+	v, err := p.GetDBVersion(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("migrate: version: %w", err)
+	}
+	return v, nil
+}
