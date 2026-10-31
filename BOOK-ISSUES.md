@@ -8,7 +8,7 @@ While following *Bogie: How to Go from Zero to Production* against **Bogie v0.6.
 
 **What differs.** A reader without the companion has no pages to copy.
 
-**Fix.** This repo writes those pages (inline CSS/JS; Bogie embeds only `*.html` and `images` from `public/`). They match the chapter’s described behaviour; they are not a verbatim dump of an unpublished checkpoint.
+**Fix.** Every page is in this repo under each chapter's `public/` folder; [`UI-PAGES.md`](UI-PAGES.md) lists, per chapter, each file, what it is, and whether it is new or changed since the previous chapter (so you know what to print). This repo writes those pages (inline CSS/JS; Bogie embeds only `*.html` and `images` from `public/`). They match the chapter’s described behaviour; they are not a verbatim dump of an unpublished checkpoint.
 
 ## Chapter 10 / 12: 401-retry in the UI `api()`
 
