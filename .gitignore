@@ -1,0 +1,49 @@
+# --- Go ---
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.out
+coverage.html
+/bin/
+/dist/
+vendor/
+go.work
+go.work.sum
+
+# --- Rails ---
+/log/*
+/tmp/*
+!/log/.keep
+!/tmp/.keep
+/storage/*
+!/storage/.keep
+/public/assets
+/public/packs
+/public/packs-test
+/node_modules
+/yarn-error.log
+.bundle/
+/vendor/bundle
+/config/master.key
+/config/credentials/*.key
+/db/*.sqlite3
+/db/*.sqlite3-*
+/coverage/
+
+# --- Environment & secrets ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# --- Editors / OS ---
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
