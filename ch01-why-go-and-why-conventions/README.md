@@ -2,6 +2,6 @@
 
 Code for this chapter: the app as it stands at the end of Chapter 1.
 
-Bogie version: v0.6.8
+Chapter 1 has no runnable code. It makes the case for Go and for conventions, and the few Go and SQL snippets in it are illustrations, not listings to run. This folder is a README only.
 
-TODO: add the code for this chapter. It will be added once the chapter content is final.
+The first runnable code is in [Chapter 2](../ch02-setting-up/).
