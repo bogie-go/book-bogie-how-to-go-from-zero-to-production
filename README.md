@@ -6,18 +6,18 @@ Companion code for the book **Bogie: How to Go from Zero to Production**.
 
 ## How to use
 
-Each chapter folder holds the app as it stands at the end of that chapter. To follow along or check your work, `cd` into the chapter you are reading:
+Only Chapters 1 to 3 have code so far. To follow along or check your work, `cd` into the chapter you are reading:
 
 ```sh
 git clone git@github.com:bogie-go/book-bogie-how-to-go-from-zero-to-production.git
 cd book-bogie-how-to-go-from-zero-to-production/ch03-show-the-catalog
 ```
 
-Each chapter folder has its own README with how to run that chapter's code.
+Each of those folders holds the app as it stands at the end of that chapter, and its README says how to run it. Chapters 1 and 3 are Bogie Depot, generated with Bogie v0.6.8. Chapter 2 is that same app plus `checkpoints/` for the scratch programs (the chapter deletes `scratch/` at the end).
 
-Chapters 1 and 3 are Bogie Depot, generated with Bogie v0.6.8 and left as those chapters leave the app. Chapter 2 is that same app plus `checkpoints/` for the scratch programs (the chapter deletes `scratch/` at the end). Chapter 18 is a standalone `net/http` playground, also with `checkpoints/`. Chapters 4–17 are full Bogie Depot snapshots. Chapters 19 and 20 are README only (no new code in those chapters).
+Chapters 4 to 20 are placeholders. Each folder is a README until that chapter is written. Earlier snapshots of those chapters stay in git history.
 
-Product images (one master copy; the Depot chapters carry their own copies): [`images/`](images/). Book feedback from building this repo lives in [`BOOK-ISSUES.md`](BOOK-ISSUES.md). Which UI pages to print is [`UI-PAGES.md`](UI-PAGES.md).
+Product images for the written chapters: [`images/`](images/) is the master copy, and Chapter 3 carries them in `public/images/products/`. Book feedback from building this repo lives in [`BOOK-ISSUES.md`](BOOK-ISSUES.md). Which UI pages to print is [`UI-PAGES.md`](UI-PAGES.md).
 
 ## Chapters
 
@@ -43,13 +43,3 @@ Product images (one master copy; the Depot chapters carry their own copies): [`i
 | 18 | Life Without Bogie | [`ch18-life-without-bogie/`](ch18-life-without-bogie/) |
 | 19 | What Bogie Generates, and Why | [`ch19-what-bogie-generates/`](ch19-what-bogie-generates/) |
 | 20 | When to Break the Conventions | [`ch20-break-the-conventions/`](ch20-break-the-conventions/) |
-
-## Layout notes
-
-Chapters 1–3 were generated fresh against Bogie v0.6.8. From Chapter 4 on, each folder is the old chapter's code moved to its new number. Two of those moves are the closest snapshot rather than a clean cut:
-
-- **Chapter 4** is the end of the old Chapter 7. The shop's `Validate` rules are here. The hand-written model tests Chapter 4 adds were not saved on their own; they first appear in Chapter 5.
-- **Chapter 5** is the end of the old Chapter 8, so it has those model tests and the rest of the testing chapter.
-- **Chapter 18** is the old Chapter 5 `net/http` playground. Its step folders are `checkpoints/ch18_01` through `checkpoints/ch18_06`.
-
-The old setting-up chapter, the two Go-essentials chapters, the empty "meet Bogie" app, and the tools chapter are not folders anymore. Chapter 2 replaces the essentials playgrounds, Chapter 1 replaces the empty app, and the tools chapter moves to Appendix C.
