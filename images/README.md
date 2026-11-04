@@ -1,6 +1,6 @@
 # Book images
 
-The shop's product images, in one place. Every chapter from 7 to 20 carries the same seven files in its own `public/images/products/` (Bogie embeds only `public/`, so each chapter needs its own copy); this folder is the master set for the book.
+The shop's product images, in one place. Every Depot chapter from 3 to 17 carries the same seven files in its own `public/images/products/` (Bogie embeds only `public/`, so each chapter needs its own copy); this folder is the master set for the book. Chapters 1 and 2 have only the 404 and 500 images from `bogie new`. Chapter 18 is the standard-library playground and does not use these files.
 
 | File | Product (seed row) |
 | --- | --- |

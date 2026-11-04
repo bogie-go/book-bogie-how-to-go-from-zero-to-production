@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bogie Depot</title>
+  <style>
+:root { --fg:#1c1b19; --muted:#6a675f; --line:#e4e1d8; --bg:#faf8f3; --accent:#c8501e; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: system-ui, sans-serif; color:var(--fg); background:var(--bg); }
+header { display:flex; align-items:center; gap:1rem; padding:1rem 1.5rem; border-bottom:1px solid var(--line); background:#fff; }
+header a { color:var(--fg); text-decoration:none; }
+header .brand { font-weight:700; font-size:1.2rem; }
+header nav { margin-left:auto; display:flex; gap:1rem; align-items:center; }
+main { max-width:960px; margin:0 auto; padding:1.5rem; }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:1rem; }
+.card { background:#fff; border:1px solid var(--line); border-radius:8px; overflow:hidden; text-decoration:none; color:inherit; display:block; }
+.card img { width:100%; aspect-ratio:1; object-fit:cover; display:block; }
+.card .body { padding:.75rem; }
+.price { color:var(--accent); font-weight:600; }
+.muted { color:var(--muted); }
+button, .button { background:var(--accent); color:#fff; border:0; border-radius:6px; padding:.5rem 1rem; font-size:1rem; cursor:pointer; text-decoration:none; display:inline-block; }
+button.secondary { background:#fff; color:var(--fg); border:1px solid var(--line); }
+input, select { padding:.5rem; border:1px solid var(--line); border-radius:6px; font-size:1rem; }
+.error { color:#b00020; }
+table { width:100%; border-collapse:collapse; background:#fff; }
+th, td { text-align:left; padding:.5rem; border-bottom:1px solid var(--line); }
+.row { display:flex; gap:1rem; flex-wrap:wrap; align-items:center; }
+.detail { display:grid; grid-template-columns:minmax(200px,360px) 1fr; gap:1.5rem; }
+.detail img { width:100%; border-radius:8px; border:1px solid var(--line); }
+@media (max-width:640px){ .detail{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/">Bogie Depot</a>
+  </header>
+  <main>
+    <h1>Merch</h1>
+    <p id="status" class="muted">Loading...</p>
+    <div id="products" class="grid"></div>
+  </main>
+  <script>
+    // Fetches GET /products and draws a card for each product.
+    const dollars = (cents) => "$" + (cents / 100).toFixed(2);
+
+    async function load() {
+      const status = document.getElementById("status");
+      const grid = document.getElementById("products");
+      try {
+        const res = await fetch("/products");
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        status.textContent = data.products.length ? "" : "No products yet.";
+        for (const p of data.products) {
+          const a = document.createElement("a");
+          a.className = "card";
+          a.href = "/product.html?id=" + p.id;
+          a.innerHTML = '<img alt=""><div class="body"><div></div><div class="price"></div></div>';
+          a.querySelector("img").src = p.image_url;
+          a.querySelector("img").alt = p.name;
+          a.querySelector(".body div").textContent = p.name;
+          a.querySelector(".price").textContent = dollars(p.price_cents);
+          grid.appendChild(a);
+        }
+      } catch (err) {
+        status.textContent = "Could not load the catalog: " + err.message;
+        status.className = "error";
+      }
+    }
+    load();
+  </script>
+</body>
+</html>
