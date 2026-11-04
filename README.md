@@ -6,18 +6,18 @@ Companion code for the book **Bogie: How to Go from Zero to Production**.
 
 ## How to use
 
-Only Chapters 1 to 3 have code so far. To follow along or check your work, `cd` into the chapter you are reading:
+Only Chapters 1 to 4 have code so far. To follow along or check your work, `cd` into the chapter you are reading:
 
 ```sh
 git clone git@github.com:bogie-go/book-bogie-how-to-go-from-zero-to-production.git
 cd book-bogie-how-to-go-from-zero-to-production/ch03-show-the-catalog
 ```
 
-Each of those folders holds the app as it stands at the end of that chapter, and its README says how to run it. Chapters 1 and 3 are Bogie Depot, generated with Bogie v0.6.8. Chapter 2 is that same app plus `checkpoints/` for the scratch programs (the chapter deletes `scratch/` at the end).
+Each of those folders holds the app as it stands at the end of that chapter, and its README says how to run it. Chapters 1 and 3 are Bogie Depot, generated with Bogie v0.6.8. Chapter 2 is that same app plus `checkpoints/` for the scratch programs (the chapter deletes `scratch/` at the end). Chapter 4 is the Chapter 3 app with the catalog's validation rules and their model tests.
 
-Chapters 4 to 20 are placeholders. Each folder is a README until that chapter is written. Earlier snapshots of those chapters stay in git history.
+Chapters 5 to 20 are placeholders. Each folder is a README until that chapter is written. Earlier snapshots of those chapters stay in git history.
 
-Product images for the written chapters: [`images/`](images/) is the master copy, and Chapter 3 carries them in `public/images/products/`. Book feedback from building this repo lives in [`BOOK-ISSUES.md`](BOOK-ISSUES.md). Which UI pages to print is [`UI-PAGES.md`](UI-PAGES.md).
+Product images for the written chapters: [`images/`](images/) is the master copy, and Chapters 3 and 4 carry them in `public/images/products/`. Book feedback from building this repo lives in [`BOOK-ISSUES.md`](BOOK-ISSUES.md). Which UI pages to print is [`UI-PAGES.md`](UI-PAGES.md).
 
 ## Chapters
 
