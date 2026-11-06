@@ -1,0 +1,365 @@
+openapi: 3.0.3
+info:
+  title: Bogie Depot API
+  version: "1.0"
+  description: The public API of depot.bogie-go.com. Staff endpoints under /admin are not part of it.
+
+paths:
+  /products:
+    get:
+      summary: The catalog, a page at a time
+      parameters:
+        - { name: category_id, in: query, schema: { type: integer } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1 } }
+        - { name: per_page, in: query, schema: { type: integer, minimum: 1, maximum: 48 } }
+      responses:
+        "200":
+          description: One page of products
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProductsPage" }
+        "400": { $ref: "#/components/responses/Error" }
+
+  /products/{id}:
+    get:
+      summary: One product, with its categories
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: The product
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProductDetail" }
+        "404": { $ref: "#/components/responses/Error" }
+
+  /categories:
+    get:
+      summary: Every category, with how many products customers can buy in it
+      responses:
+        "200":
+          description: The categories, by name
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Categories" }
+
+  /guest_sessions:
+    post:
+      summary: Start a guest session
+      description: Returns a token for a guest, who can fill a cart but not place an order.
+      responses:
+        "201":
+          description: A guest token
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GuestSession" }
+
+  /users:
+    post:
+      summary: Sign up
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Credentials" }
+      responses:
+        "201":
+          description: The new account, signed in
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Session" }
+        "400": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+
+  /sessions:
+    post:
+      summary: Sign in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Credentials" }
+      responses:
+        "200":
+          description: Signed in
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Session" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+
+  /cart:
+    get:
+      summary: The caller's cart, priced
+      security: [{ bearer: [] }]
+      responses:
+        "200": { $ref: "#/components/responses/Cart" }
+        "401": { $ref: "#/components/responses/Error" }
+
+  /cart_items:
+    post:
+      summary: Add a product to the cart
+      security: [{ bearer: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AddCartItem" }
+      responses:
+        "200": { $ref: "#/components/responses/Cart" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+
+  /cart_items/{id}:
+    patch:
+      summary: Change a line's quantity (zero or less removes it)
+      security: [{ bearer: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateCartItem" }
+      responses:
+        "200": { $ref: "#/components/responses/Cart" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+    delete:
+      summary: Remove a line from the cart
+      security: [{ bearer: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200": { $ref: "#/components/responses/Cart" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+
+  /orders:
+    post:
+      summary: Check out the cart
+      description: Needs an account; a guest is refused with 403.
+      security: [{ bearer: [] }]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PlaceOrder" }
+      responses:
+        "201":
+          description: The order that was placed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Order" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "403": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+
+  /orders/{id}:
+    get:
+      summary: One of the caller's own orders
+      security: [{ bearer: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: The order
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Order" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+
+components:
+  schemas:
+    Product:
+      type: object
+      additionalProperties: false
+      required: [id, name, description, price_cents, stock, image_url]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description: { type: string }
+        price_cents: { type: integer, minimum: 1 }
+        stock: { type: integer, minimum: 0 }
+        image_url: { type: string }
+
+    ProductDetail:
+      type: object
+      additionalProperties: false
+      required: [id, name, description, price_cents, stock, image_url, categories]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description: { type: string }
+        price_cents: { type: integer, minimum: 1 }
+        stock: { type: integer, minimum: 0 }
+        image_url: { type: string }
+        categories:
+          type: array
+          items: { $ref: "#/components/schemas/CategoryName" }
+
+    ProductsPage:
+      type: object
+      additionalProperties: false
+      required: [products, page, per_page, total]
+      properties:
+        products: { type: array, items: { $ref: "#/components/schemas/Product" } }
+        page: { type: integer }
+        per_page: { type: integer }
+        total: { type: integer }
+
+    CategoryName:
+      type: object
+      additionalProperties: false
+      required: [id, name]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+
+    Error:
+      type: object
+      additionalProperties: false
+      required: [status, error]
+      properties:
+        status: { type: string, enum: [error] }
+        error: { type: string }
+
+    Category:
+      type: object
+      additionalProperties: false
+      required: [id, name, product_count]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        product_count: { type: integer, minimum: 0 }
+
+    Categories:
+      type: object
+      additionalProperties: false
+      required: [categories]
+      properties:
+        categories: { type: array, items: { $ref: "#/components/schemas/Category" } }
+
+    GuestSession:
+      type: object
+      additionalProperties: false
+      required: [token]
+      properties:
+        token: { type: string }
+
+    Credentials:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email: { type: string }
+        password: { type: string }
+
+    Session:
+      type: object
+      additionalProperties: false
+      required: [token, email]
+      properties:
+        token: { type: string }
+        email: { type: string }
+
+    AddCartItem:
+      type: object
+      additionalProperties: false
+      required: [product_id, quantity]
+      properties:
+        product_id: { type: integer }
+        quantity: { type: integer }
+
+    UpdateCartItem:
+      type: object
+      additionalProperties: false
+      required: [quantity]
+      properties:
+        quantity: { type: integer }
+
+    CartLine:
+      type: object
+      additionalProperties: false
+      required: [id, product_id, name, image_url, unit_price_cents, quantity, subtotal_cents]
+      properties:
+        id: { type: integer }
+        product_id: { type: integer }
+        name: { type: string }
+        image_url: { type: string }
+        unit_price_cents: { type: integer }
+        quantity: { type: integer }
+        subtotal_cents: { type: integer }
+
+    AppliedRule:
+      type: object
+      additionalProperties: false
+      required: [name, price_before_cents, price_after_cents, discount_cents]
+      properties:
+        name: { type: string }
+        price_before_cents: { type: integer, minimum: 0 }
+        price_after_cents: { type: integer, minimum: 0 }
+        discount_cents: { type: integer, minimum: 1 }
+
+    Cart:
+      type: object
+      additionalProperties: false
+      required: [items, subtotal_cents, discount_cents, total_cents, applied_rules]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/CartLine" } }
+        subtotal_cents: { type: integer }
+        discount_cents: { type: integer }
+        total_cents: { type: integer }
+        applied_rules: { type: array, items: { $ref: "#/components/schemas/AppliedRule" } }
+
+    PlaceOrder:
+      type: object
+      additionalProperties: false
+      properties:
+        coupon_code: { type: string }
+
+    OrderItem:
+      type: object
+      additionalProperties: false
+      required: [product_id, name, quantity, unit_price_cents, subtotal_cents]
+      properties:
+        product_id: { type: integer }
+        name: { type: string }
+        quantity: { type: integer }
+        unit_price_cents: { type: integer }
+        subtotal_cents: { type: integer }
+
+    Order:
+      type: object
+      additionalProperties: false
+      required: [id, status, subtotal_cents, discount_cents, total_cents, items, created_at]
+      properties:
+        id: { type: integer }
+        status: { type: string }
+        subtotal_cents: { type: integer }
+        discount_cents: { type: integer }
+        total_cents: { type: integer }
+        items: { type: array, items: { $ref: "#/components/schemas/OrderItem" } }
+        created_at: { type: string, format: date-time }
+
+  responses:
+    Error:
+      description: Something the client must fix, or that went wrong
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+    Cart:
+      description: The whole cart, priced
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Cart" }
+
+  securitySchemes:
+    bearer: { type: http, scheme: bearer }

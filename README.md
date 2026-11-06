@@ -6,18 +6,22 @@ Companion code for the book **Bogie: How to Go from Zero to Production**.
 
 ## How to use
 
-Only Chapters 1 to 4 and Chapter 8 have code so far. To follow along or check your work, `cd` into the chapter you are reading:
+To follow along or check your work, `cd` into the chapter you are reading:
 
 ```sh
 git clone git@github.com:bogie-go/book-bogie-how-to-go-from-zero-to-production.git
 cd book-bogie-how-to-go-from-zero-to-production/ch03-show-the-catalog
 ```
 
-Each of those folders holds the app as it stands at the end of that chapter, and its README says how to run it. Chapters 1 and 3 are Bogie Depot, generated with Bogie v0.6.8. Chapter 2 is that same app plus `checkpoints/` for the scratch programs (the chapter deletes `scratch/` at the end). Chapter 4 is the Chapter 3 app with the catalog's validation rules and their model tests. Chapter 8 is the Bogie Depot app with the cart, per-visitor guest carts and the pricing pipeline; Chapters 5 to 7 have no folder of their own yet, so Chapter 8 carries their code too.
+Each folder holds the app (or the programs) as it stands at the end of that chapter, and its README says how to run it.
 
-Chapters 5 to 7 and 9 to 20 are placeholders. Each folder is a README until that chapter is written. Earlier snapshots of those chapters stay in git history.
+Chapters 1 and 3 through 17 are Bogie Depot, one snapshot per chapter, on Bogie v0.6.8. Chapter 2 is the Chapter 1 app plus `checkpoints/` for the scratch programs (the chapter deletes `scratch/` at the end). Chapters 5 through 7 and 9 through 17 continue that shop: tests, a cart, guest sessions, the sale from Chapter 8, accounts, orders, staff, archive, categories, background email, the API contract, deploy config, and `/status`. Chapters 12, 13, and 15 are complete apps on purpose: later chapters tell a reader who skipped them to start from those folders.
 
-Product images for the written chapters: [`images/`](images/) is the master copy, and Chapters 3, 4 and 8 carry them in `public/images/products/`. Book feedback from building this repo lives in [`BOOK-ISSUES.md`](BOOK-ISSUES.md). Which UI pages to print is [`UI-PAGES.md`](UI-PAGES.md).
+Chapter 18 is not another Depot snapshot. It is the standard-library playground, with `checkpoints/ch18_01` through `ch18_06`. Chapters 19 and 20 have no code of their own. Chapter 19 is read with the finished shop in Chapter 17 open beside it.
+
+Product images: [`images/`](images/) is the master copy, and the catalog chapters carry them in `public/images/products/`. Book feedback from building this repo lives in [`BOOK-ISSUES.md`](BOOK-ISSUES.md). Which UI pages to print is [`UI-PAGES.md`](UI-PAGES.md).
+
+Migration filenames in Chapters 5 through 17 use timestamps that sort after Chapter 4's `create_products` (and, from Chapter 9 on, after Chapter 8's `create_price_rules`). Bogie refuses a migration older than one already applied, so a database prepared in an earlier chapter can take the next chapter's new migrations. The book prints earlier timestamps. The SQL matches the book. Each chapter README notes the names it uses.
 
 ## Chapters
 

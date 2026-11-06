@@ -1,0 +1,24 @@
+package adapter_test
+
+import (
+	"testing"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+
+	"depot/db/adapter"
+	"depot/test/testdb"
+)
+
+// store is a migrated test database with every table empty, reset before
+// every spec, so each spec starts from nothing.
+var store *adapter.Store
+
+var _ = BeforeEach(func() {
+	store = testdb.Store(GinkgoT())
+})
+
+func TestAdapter(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Adapter")
+}
