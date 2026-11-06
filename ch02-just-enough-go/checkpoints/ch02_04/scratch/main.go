@@ -1,19 +1,19 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
-type Product struct {
-	Name  string
-	Stock int32
-}
-
-// Take removes n items from stock.
-func (p Product) Take(n int32) {
-	p.Stock -= n
+// formatPrice shows cents as dollars and cents.
+func formatPrice(cents int32) string {
+	return fmt.Sprintf("$%d.%02d", cents/100, cents%100)
 }
 
 func main() {
-	mug := Product{Name: "Bogie Ceramic Mug", Stock: 150}
-	mug.Take(3)
-	fmt.Println(mug.Stock)
+	a, b := 0.1, 0.2
+	fmt.Println(a + b)
+
+	fmt.Println(formatPrice(1400), formatPrice(305))
+	fmt.Println(formatPrice(math.MaxInt32))
 }

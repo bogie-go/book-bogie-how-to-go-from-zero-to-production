@@ -2,13 +2,18 @@ package main
 
 import "fmt"
 
+type Product struct {
+	Name  string
+	Stock int32
+}
+
+// Take removes n items from stock.
+func (p Product) Take(n int32) {
+	p.Stock -= n
+}
+
 func main() {
-	var none []string
-	names := make([]string, 0, 2)
-	names = append(names, "Bogie Ceramic Mug", "Bogie Logo Sticker")
-	for i, name := range names {
-		fmt.Println(i, name)
-	}
-	fmt.Println("names has", len(names), "items; names is nil:", names == nil)
-	fmt.Println("none has", len(none), "items; none is nil:", none == nil)
+	mug := Product{Name: "Bogie Ceramic Mug", Stock: 150}
+	mug.Take(3)
+	fmt.Println(mug.Stock)
 }

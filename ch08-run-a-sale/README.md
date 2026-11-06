@@ -4,7 +4,7 @@ Code for this chapter: the app as it stands at the end of Chapter 8.
 
 Bogie version: v0.6.8 (created with `bogie new depot`, module name `depot`). Built on the Chapter 7 app: every visitor has a cart of their own. The chapter adds a pricing pipeline: price rules live in one table, each kind of rule is a struct behind a `Rule` interface, and the cart's price flows through the rules running now, one after another, with every step recorded.
 
-Chapters 5, 6 and 7 don't have folders of their own yet, so this folder carries their code too: the cart and its items (Chapter 6) and per-visitor guest carts (Chapter 7). Chapter 5 added tests only.
+The cart and guest sessions this folder still contains are the end of Chapters 6 and 7. Those chapters have their own folders now. Chapter 5's request tests are in `ch05-test-the-whole-app`.
 
 ## Run it
 

@@ -137,6 +137,12 @@ Checked by running Bogie v0.6.8 (`bogie new`, every generator command in the sho
 
 - Seven `[SCREENSHOT NEEDED]` placeholders, now named for the new chapters: Chapter 1 `ch01-welcome.png`, Chapter 3 `ch03-catalog.png`, Chapter 6 `ch06-add-to-cart.png`, Chapter 8 `ch08-sale.png`, Chapter 11 `ch11-admin.png`, Chapter 13 `ch13-categories.png`, Chapter 14 `ch14-mailpit.png`. The files are in [`screenshots/`](screenshots/).
 
+## Chapters 5–17: migration timestamps (2026-11-06)
+
+The manuscripts print the timestamps from the writing machine (`20261031071211_create_products`, `20261031071536_create_carts`, `20261031072133_create_price_rules`, `20261031072640_create_users`, `20261031073237_create_orders`, `20261031073941_add_role_to_users`, `20261031074654_add_archived_at_to_products`, `20261031075305_create_product_categories`, and the files between them).
+
+This repo keeps one chain so a database prepared in an earlier chapter can take the next chapter's migrations. Bogie refuses a migration older than one already applied. Chapter 4's `create_products` is `20261104093443`. Chapter 8's cart tables and `create_price_rules` follow it (`20261104094512` through `20261104094600`). Chapters 9 through 17 continue from there (`20261104094700_create_users` through `20261104095300_create_product_categories`). The SQL in each file is the SQL the book prints. Each chapter README lists the names that folder uses.
+
 ## Chapters 1–3, checked against Bogie v0.6.8 (2026-11-04)
 
 Regenerated with `bogie new depot`, `bogie g model product name description:text price_cents:integer stock:integer image_url`, `bogie g scaffold_controller products --only index,show`, and `bogie g seed products`. `go build`, `go vet`, and `bogie test` pass for Chapters 1 and 3. Chapter 2's six scratch programs print what the chapter shows.

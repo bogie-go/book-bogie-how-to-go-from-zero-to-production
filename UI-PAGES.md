@@ -51,7 +51,7 @@ The shared script block now gets a guest token (`POST /guest_sessions`), keeps i
 
 | File | What it is | Status |
 | --- | --- | --- |
-| `cart.html` | Shows the applied sale rules (name and discount) next to the total, from `applied_rules` in `GET /cart`. | CHANGED |
+| `cart.html` | Shows Subtotal, one row per applied rule (`$68.00 → $54.40`, from `price_before_cents` and `price_after_cents`), and Total. | CHANGED |
 | `index.html`, `product.html` | No change from Chapter 7. | same |
 
 ## Chapter 9: Add Customer Accounts (`ch09-add-customer-accounts/public/`)
