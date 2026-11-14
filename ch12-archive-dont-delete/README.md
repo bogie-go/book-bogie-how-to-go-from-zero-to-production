@@ -2,11 +2,11 @@
 
 Code for this chapter: the app as it stands at the end of Chapter 12.
 
-Bogie version: v0.6.8 (created with `bogie new depot`, module name `depot`).
+Bogie version: v1.0.0 (created with `bogie new depot`, module name `depot`).
 
 ## Run it
 
-You need Go 1.26+, Docker with Compose v2, and Bogie v0.6.8 (`go install github.com/bogie-go/bogie@v0.6.8`).
+You need Go 1.26+, Docker with Compose v2, and Bogie v1.0.0 (`go install github.com/bogie-go/bogie@v1.0.0`).
 
 ```sh
 cd ch12-archive-dont-delete

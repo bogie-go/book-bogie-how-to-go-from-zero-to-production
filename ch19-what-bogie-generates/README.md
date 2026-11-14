@@ -2,7 +2,7 @@
 
 Chapter 19 has no code. It is a tour of the code Bogie generates, by layer, read with the finished `depot` app open beside it ("There's no new code in this chapter, and nothing to type"). This folder is a README only.
 
-The finished app is in [Chapter 17](../ch17-keep-the-shop-healthy/): Bogie Depot as it stands at the end of the book's code. Bogie version: v0.6.8.
+The finished app is in [Chapter 17](../ch17-keep-the-shop-healthy/): Bogie Depot as it stands at the end of the book's code. Bogie version: v1.0.0.
 
 Following the tour in that folder:
 

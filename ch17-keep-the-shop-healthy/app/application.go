@@ -75,11 +75,11 @@ func NewApplication(ctx context.Context) (*Application, error) {
 	}
 
 	// River runs on the same Postgres, so a job enqueued in a transaction
-	// commits with the business row or not at all. The workers are
-	// registered in app/jobs; `bogie g job` adds one.
+	// commits with the business row or not at all. The workers, and any
+	// periodic schedules, are registered in app/jobs; `bogie g job` adds one.
 	confirm := order_confirmation.New(store, mailer.New(cfg.Smtp), log)
-	workers, jobsRegistered := jobs.Workers(log, confirm)
-	riverConfig := &river.Config{Logger: log}
+	workers, periodic, jobsRegistered := jobs.Workers(log, confirm)
+	riverConfig := &river.Config{Logger: log, PeriodicJobs: periodic}
 	if jobsRegistered {
 		// Queues and Workers go together: a client with either alone is
 		// refused, and one with neither is insert-only.

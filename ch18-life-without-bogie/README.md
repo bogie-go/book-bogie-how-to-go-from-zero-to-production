@@ -2,7 +2,7 @@
 
 Code for this chapter: a small catalog API built with the standard library, not another snapshot of Bogie Depot.
 
-Bogie version: v0.6.8. The shop is finished by Chapter 17. This folder is the playground the chapter builds beside it. The reader creates `without-bogie` next to `depot` and runs `go mod init without-bogie`. The listings in the book are labeled under this folder's `checkpoints/`.
+Bogie version: v1.0.0. The shop is finished by Chapter 17. This folder is the playground the chapter builds beside it. The reader creates `without-bogie` next to `depot` and runs `go mod init without-bogie`. The listings in the book are labeled under this folder's `checkpoints/`.
 
 ## Run it
 

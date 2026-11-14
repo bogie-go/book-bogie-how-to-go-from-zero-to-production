@@ -2,7 +2,7 @@
 
 Code for this chapter: the Chapter 1 app, unchanged, plus the scratch programs the chapter runs.
 
-Bogie version: v0.6.8. The shop is the same tree as [`ch01-hello-bogie-depot`](../ch01-hello-bogie-depot/). The chapter deletes `scratch/` at the end, so this folder does not contain one.
+Bogie version: v1.0.0. The shop is the same tree as [`ch01-hello-bogie-depot`](../ch01-hello-bogie-depot/). The chapter deletes `scratch/` at the end, so this folder does not contain one.
 
 ## Run the shop
 

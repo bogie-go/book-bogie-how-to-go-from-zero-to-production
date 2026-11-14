@@ -33,24 +33,41 @@ type Maker struct {
 // Claims is what a verified token says.
 type Claims struct {
 	// Subject is who the token was minted for: the caller's user id, usually.
-	Subject   string
+	Subject string
+	// Role is the role string the token carried, or empty when it carried
+	// none. There is no role table; a policy decides what the string means.
+	Role      string
 	ExpiresAt time.Time
 	// ID is the token's own id, for a revocation list if you keep one.
 	ID string
 }
 
-// Mint signs a token for subject that expires after ttl.
+// signedClaims is the JWT payload: the registered claims plus an optional role.
+type signedClaims struct {
+	Role string `json:"role,omitempty"`
+	jwt.RegisteredClaims
+}
+
+// Mint signs a token for subject that expires after ttl, with no role.
 func (m Maker) Mint(subject string, ttl time.Duration) (string, error) {
+	return m.MintFor(subject, "", ttl)
+}
+
+// MintFor signs a token for subject in role. An empty role is the same as Mint.
+func (m Maker) MintFor(subject, role string, ttl time.Duration) (string, error) {
 	if subject == "" {
 		return "", fmt.Errorf("%w: empty subject", ErrInvalid)
 	}
 	now := time.Now()
-	claims := jwt.RegisteredClaims{
-		Issuer:    m.Issuer,
-		Subject:   subject,
-		IssuedAt:  jwt.NewNumericDate(now),
-		ExpiresAt: jwt.NewNumericDate(now.Add(ttl)),
-		ID:        uuid.NewString(),
+	claims := signedClaims{
+		Role: role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    m.Issuer,
+			Subject:   subject,
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(ttl)),
+			ID:        uuid.NewString(),
+		},
 	}
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(m.Secret)
 }
@@ -59,7 +76,7 @@ func (m Maker) Mint(subject string, ttl time.Duration) (string, error) {
 // claims. The method is pinned to HS256 so a token claiming "none" or an
 // asymmetric algorithm is refused before the key is consulted.
 func (m Maker) Verify(raw string) (Claims, error) {
-	var claims jwt.RegisteredClaims
+	var claims signedClaims
 	_, err := jwt.ParseWithClaims(raw, &claims, func(*jwt.Token) (any, error) { return m.Secret, nil },
 		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
 		jwt.WithIssuer(m.Issuer),
@@ -73,5 +90,5 @@ func (m Maker) Verify(raw string) (Claims, error) {
 	case claims.Subject == "":
 		return Claims{}, ErrInvalid
 	}
-	return Claims{Subject: claims.Subject, ExpiresAt: claims.ExpiresAt.Time, ID: claims.ID}, nil
+	return Claims{Subject: claims.Subject, Role: claims.Role, ExpiresAt: claims.ExpiresAt.Time, ID: claims.ID}, nil
 }

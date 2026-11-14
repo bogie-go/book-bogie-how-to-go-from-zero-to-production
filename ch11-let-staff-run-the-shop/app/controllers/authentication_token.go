@@ -22,7 +22,8 @@ func (s *Server) Tokens() token.Maker {
 //
 //	s.Posts.SetupRoutes(s.WithUser(&r.RouterGroup))
 //
-// and in a handler, middlewares.Subject(c) is the token's subject.
+// and in a handler, middlewares.Subject(c) is the token's subject and
+// middlewares.Role(c) is the role string it carried, or "".
 func (s *Server) WithUser(r *gin.RouterGroup) *gin.RouterGroup {
 	return r.Group("", middlewares.RequireUser(s.Tokens()))
 }

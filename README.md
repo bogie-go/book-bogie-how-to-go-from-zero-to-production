@@ -2,7 +2,7 @@
 
 Companion code for the book **Bogie: How to Go from Zero to Production**.
 
-**Pinned Bogie version: v0.6.8.** Every chapter folder targets this version.
+**Pinned Bogie version: v1.0.0.** Every chapter folder targets this version.
 
 ## How to use
 
@@ -15,9 +15,9 @@ cd book-bogie-how-to-go-from-zero-to-production/ch03-show-the-catalog
 
 Each folder holds the app (or the programs) as it stands at the end of that chapter, and its README says how to run it.
 
-Chapters 1 and 3 through 17 are Bogie Depot, one snapshot per chapter, on Bogie v0.6.8. Chapter 2 is the Chapter 1 app plus `checkpoints/` for the scratch programs (the chapter deletes `scratch/` at the end). Chapters 5 through 7 and 9 through 17 continue that shop: tests, a cart, guest sessions, the sale from Chapter 8, accounts, orders, staff, archive, categories, background email, the API contract, deploy config, and `/status`. Chapters 12, 13, and 15 are complete apps on purpose: later chapters tell a reader who skipped them to start from those folders.
+Chapters 1 and 3 through 17 are Bogie Depot, one snapshot per chapter, on Bogie v1.0.0. Chapter 2 is the Chapter 1 app plus `checkpoints/` for the scratch programs (the chapter deletes `scratch/` at the end). Chapters 5 through 7 and 9 through 17 continue that shop: tests, a cart, guest sessions, the sale from Chapter 8, accounts, orders, staff, archive, categories, background email, the API contract, deploy config, and `/status`. Chapters 12, 13, and 15 are complete apps on purpose: later chapters tell a reader who skipped them to start from those folders.
 
-Chapter 18 is not another Depot snapshot. It is the standard-library playground, with `checkpoints/ch18_01` through `ch18_06`. Chapters 19 and 20 have no code of their own. Chapter 19 is read with the finished shop in Chapter 17 open beside it.
+Chapter 18 is not another Depot snapshot. It is the standard-library playground, with `checkpoints/ch18_01` through `ch18_06`. Chapters 19 and 21 have no code of their own. Chapter 19 is read with the finished shop in Chapter 17 open beside it. Chapter 20 is not a full app either: it holds only the Claude Code hook the chapter adds (`.claude/hooks/guard-generated.sh` and `.claude/settings.json`), to copy into your existing app.
 
 Product images: [`images/`](images/) is the master copy, and the catalog chapters carry them in `public/images/products/`. Book feedback from building this repo lives in [`BOOK-ISSUES.md`](BOOK-ISSUES.md). Which UI pages to print is [`UI-PAGES.md`](UI-PAGES.md).
 
@@ -46,4 +46,5 @@ Migration filenames in Chapters 5 through 17 use timestamps that sort after Chap
 | 17 | Keep the Shop Healthy | [`ch17-keep-the-shop-healthy/`](ch17-keep-the-shop-healthy/) |
 | 18 | Life Without Bogie | [`ch18-life-without-bogie/`](ch18-life-without-bogie/) |
 | 19 | What Bogie Generates, and Why | [`ch19-what-bogie-generates/`](ch19-what-bogie-generates/) |
-| 20 | When to Break the Conventions | [`ch20-break-the-conventions/`](ch20-break-the-conventions/) |
+| 20 | Work with an AI Assistant | [`ch20-work-with-an-ai-assistant/`](ch20-work-with-an-ai-assistant/) |
+| 21 | When to Break the Conventions | [`ch21-break-the-conventions/`](ch21-break-the-conventions/) |

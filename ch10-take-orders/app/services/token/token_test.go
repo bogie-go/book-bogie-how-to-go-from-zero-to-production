@@ -33,6 +33,7 @@ var _ = Describe("Maker", func() {
 
 			It("verifies", func() { Expect(err).NotTo(HaveOccurred()) })
 			It("gives back the subject", func() { Expect(claims.Subject).To(Equal("user-42")) })
+			It("carries no role unless one was minted", func() { Expect(claims.Role).To(BeEmpty()) })
 			It("carries an id", func() { Expect(claims.ID).NotTo(BeEmpty()) })
 			It("expires in the future", func() { Expect(claims.ExpiresAt).To(BeTemporally(">", time.Now())) })
 		})
@@ -87,6 +88,19 @@ var _ = Describe("Maker", func() {
 			})
 
 			It("refuses to mint", func() { Expect(err).To(HaveOccurred()) })
+		})
+	})
+
+	Describe("MintFor", func() {
+		Context("with a role", func() {
+			BeforeEach(func() {
+				raw, err = maker.MintFor("user-42", "admin", time.Minute)
+				Expect(err).NotTo(HaveOccurred())
+				claims, err = maker.Verify(raw)
+			})
+
+			It("keeps the role", func() { Expect(claims.Role).To(Equal("admin")) })
+			It("keeps the subject", func() { Expect(claims.Subject).To(Equal("user-42")) })
 		})
 	})
 })
