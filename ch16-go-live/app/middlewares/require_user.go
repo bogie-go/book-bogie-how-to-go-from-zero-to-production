@@ -16,13 +16,17 @@ type userTokens interface {
 	Verify(raw string) (token.Claims, error)
 }
 
-const subjectKey = "subject"
+const (
+	subjectKey = "subject"
+	roleKey    = "role"
+)
 
 // RequireUser guards routes for a signed-in user: a bearer token in the
 // Authorization header that the token service verifies. The token's subject
-// is then on the context for handlers, through Subject. Who the subject is,
-// a user id usually, is for the caller and the handler to agree on;
-// nothing is loaded here.
+// and role are then on the context for handlers, through Subject and Role.
+// Who the subject is, a user id usually, is for the caller and the handler
+// to agree on; nothing is loaded here, and a role is only the string the
+// token carried.
 func RequireUser(tokens userTokens) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		raw, ok := strings.CutPrefix(c.GetHeader("Authorization"), "Bearer ")
@@ -38,6 +42,7 @@ func RequireUser(tokens userTokens) gin.HandlerFunc {
 			return
 		}
 		c.Set(subjectKey, claims.Subject)
+		c.Set(roleKey, claims.Role)
 		c.Next()
 	}
 }
@@ -45,3 +50,7 @@ func RequireUser(tokens userTokens) gin.HandlerFunc {
 // Subject is who the request's token was minted for, or "" on a route that
 // RequireUser does not guard.
 func Subject(c *gin.Context) string { return c.GetString(subjectKey) }
+
+// Role is the role string the request's token carried, or "" when it carried
+// none or RequireUser does not guard the route.
+func Role(c *gin.Context) string { return c.GetString(roleKey) }

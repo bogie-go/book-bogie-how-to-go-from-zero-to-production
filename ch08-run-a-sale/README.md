@@ -2,13 +2,13 @@
 
 Code for this chapter: the app as it stands at the end of Chapter 8.
 
-Bogie version: v0.6.8 (created with `bogie new depot`, module name `depot`). Built on the Chapter 7 app: every visitor has a cart of their own. The chapter adds a pricing pipeline: price rules live in one table, each kind of rule is a struct behind a `Rule` interface, and the cart's price flows through the rules running now, one after another, with every step recorded.
+Bogie version: v1.0.0 (created with `bogie new depot`, module name `depot`). Built on the Chapter 7 app: every visitor has a cart of their own. The chapter adds a pricing pipeline: price rules live in one table, each kind of rule is a struct behind a `Rule` interface, and the cart's price flows through the rules running now, one after another, with every step recorded.
 
 The cart and guest sessions this folder still contains are the end of Chapters 6 and 7. Those chapters have their own folders now. Chapter 5's request tests are in `ch05-test-the-whole-app`.
 
 ## Run it
 
-You need Go 1.26+, Docker with Compose v2, and Bogie v0.6.8 (`go install github.com/bogie-go/bogie@v0.6.8`).
+You need Go 1.26+, Docker with Compose v2, and Bogie v1.0.0 (`go install github.com/bogie-go/bogie@v1.0.0`).
 
 ```sh
 cd ch08-run-a-sale

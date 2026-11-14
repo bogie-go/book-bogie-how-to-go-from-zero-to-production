@@ -2,11 +2,11 @@
 
 Code for this chapter: the app as it stands at the end of Chapter 3.
 
-Bogie version: v0.6.8. Built on the Chapter 1 app: timestamps removed from `ProductResponse`, `GetProductByName` and `FindOrCreateProductByName`, the seven-product seed, and `public/index.html`, `public/product.html`, and the product images.
+Bogie version: v1.0.0. Built on the Chapter 1 app: timestamps removed from `ProductResponse`, `GetProductByName` and `FindOrCreateProductByName`, the seven-product seed, and `public/index.html`, `public/product.html`, and the product images.
 
 ## Run it
 
-You need Go 1.26+, Docker with Compose v2, and Bogie v0.6.8 (`go install github.com/bogie-go/bogie@v0.6.8`).
+You need Go 1.26+, Docker with Compose v2, and Bogie v1.0.0 (`go install github.com/bogie-go/bogie@v1.0.0`).
 
 ```sh
 cd ch03-show-the-catalog

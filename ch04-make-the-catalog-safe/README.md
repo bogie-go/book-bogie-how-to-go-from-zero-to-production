@@ -2,11 +2,11 @@
 
 Code for this chapter: the app as it stands at the end of Chapter 4.
 
-Bogie version: v0.6.8. Built on the Chapter 3 app: `Product.Validate` refuses a blank name, a price that is not more than zero, and negative stock. A stock of zero is still valid. The model's tests cover each rule. The store already calls `Validate` on save, so a seed cannot skip the rules.
+Bogie version: v1.0.0. Built on the Chapter 3 app: `Product.Validate` refuses a blank name, a price that is not more than zero, and negative stock. A stock of zero is still valid. The model's tests cover each rule. The store already calls `Validate` on save, so a seed cannot skip the rules.
 
 ## Run it
 
-You need Go 1.26+, Docker with Compose v2, and Bogie v0.6.8 (`go install github.com/bogie-go/bogie@v0.6.8`).
+You need Go 1.26+, Docker with Compose v2, and Bogie v1.0.0 (`go install github.com/bogie-go/bogie@v1.0.0`).
 
 ```sh
 cd ch04-make-the-catalog-safe
