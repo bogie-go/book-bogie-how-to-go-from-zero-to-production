@@ -21,8 +21,10 @@ var _ = Describe("GET /cart", func() {
 		)))
 	})
 
-	It("applies the sales running now", func() {
+	It("applies the sales running now, and shows what they give away", func() {
 		keycap := factories.Product(GinkgoT(), app.Store, func(p *models.Product) {
+			p.Name = "Bogie Keycap"
+			p.ImageUrl = "/images/products/bogie-keycap.webp"
 			p.PriceCents = 1800
 			p.Stock = 10
 		})
@@ -33,13 +35,13 @@ var _ = Describe("GET /cart", func() {
 		})
 		cart, err := app.Store.FindOrCreateCartByToken(GinkgoT().Context(), "guest:1")
 		Expect(err).NotTo(HaveOccurred())
-		Expect(app.Store.AddCartItem(GinkgoT().Context(), cart.ID, keycap.ID, 3)).To(Succeed())
+		Expect(app.Store.AddCartItem(GinkgoT().Context(), cart.ID, keycap.ID, 2)).To(Succeed())
 
 		app.Get("/cart").As("guest:1").Do().
 			Status(http.StatusOK).
-			Contains(`"subtotal_cents":5400,"discount_cents":1800,"total_cents":3600,` +
-				`"applied_rules":[{"name":"Keycaps: buy 2, get 1 free",` +
-				`"price_before_cents":5400,"price_after_cents":3600,"discount_cents":1800}]`)
+			Contains(`"subtotal_cents":3600,"discount_cents":0,"total_cents":3600,"applied_rules":[],` +
+				fmt.Sprintf(`"free_items":[{"product_id":%d,"name":"Bogie Keycap",`, keycap.ID) +
+				`"image_url":"/images/products/bogie-keycap.webp","quantity":1,"rule":"Keycaps: buy 2, get 1 free"}]`)
 	})
 
 	It("still answers when a rule in the database won't load", func() {

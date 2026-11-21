@@ -15,11 +15,16 @@ import (
 
 var _ = Describe("GET /cart", func() {
 	Context("with a sale running", func() {
+		var keycapID int64
+
 		BeforeEach(func() {
 			keycap := factories.Product(GinkgoT(), app.Store, func(p *models.Product) {
+				p.Name = "Bogie Keycap"
+				p.ImageUrl = "/images/products/bogie-keycap.webp"
 				p.PriceCents = 1800
 				p.Stock = 10
 			})
+			keycapID = keycap.ID
 			factories.PriceRule(GinkgoT(), app.Store, func(r *models.PriceRule) {
 				r.Name = "Keycaps: buy 2, get 1 free"
 				r.Kind = "buy_x_get_y"
@@ -27,15 +32,15 @@ var _ = Describe("GET /cart", func() {
 			})
 			cart, err := app.Store.FindOrCreateCartByToken(GinkgoT().Context(), "guest:1")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(app.Store.AddCartItem(GinkgoT().Context(), cart.ID, keycap.ID, 3)).To(Succeed())
+			Expect(app.Store.AddCartItem(GinkgoT().Context(), cart.ID, keycap.ID, 2)).To(Succeed())
 		})
 
-		It("makes one keycap free, and names the rule", func() {
+		It("adds a free keycap, names the rule, and leaves the price alone", func() {
 			app.Get("/cart").As("guest:1").Do().
 				Status(http.StatusOK).
-				Contains(`"subtotal_cents":5400,"discount_cents":1800,"total_cents":3600,` +
-					`"applied_rules":[{"name":"Keycaps: buy 2, get 1 free",` +
-					`"price_before_cents":5400,"price_after_cents":3600,"discount_cents":1800}]`)
+				Contains(`"subtotal_cents":3600,"discount_cents":0,"total_cents":3600,"applied_rules":[],` +
+					fmt.Sprintf(`"free_items":[{"product_id":%d,"name":"Bogie Keycap",`, keycapID) +
+					`"image_url":"/images/products/bogie-keycap.webp","quantity":1,"rule":"Keycaps: buy 2, get 1 free"}]`)
 		})
 	})
 

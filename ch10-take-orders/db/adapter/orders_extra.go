@@ -30,7 +30,12 @@ func (s *Store) PlaceOrder(ctx context.Context, userID, cartID int64, rules []mo
 			return fmt.Errorf("%w: the cart is empty", models.ErrInvalid)
 		}
 
+		priced := models.PriceCart(lines, rules)
+
 		byProduct := slices.Clone(lines)
+		for _, f := range priced.FreeItems {
+			byProduct = append(byProduct, models.CartLine{ProductID: f.ProductID, Name: f.Name, Quantity: f.Quantity})
+		}
 		slices.SortFunc(byProduct, func(a, b models.CartLine) int { return cmp.Compare(a.ProductID, b.ProductID) })
 		for _, l := range byProduct {
 			n, err := q.TakeStock(ctx, sqlc.TakeStockParams{ID: l.ProductID, Quantity: l.Quantity})
@@ -42,7 +47,6 @@ func (s *Store) PlaceOrder(ctx context.Context, userID, cartID int64, rules []mo
 			}
 		}
 
-		priced := models.PriceCart(lines, rules)
 		order = models.Order{
 			UserID: userID, Status: models.OrderPlaced,
 			SubtotalCents: priced.SubtotalCents, DiscountCents: priced.DiscountCents(), TotalCents: priced.TotalCents,
@@ -59,8 +63,14 @@ func (s *Store) PlaceOrder(ctx context.Context, userID, cartID int64, rules []mo
 		}
 		order = orderFromRow(row)
 
+		items := make([]models.OrderItem, 0, len(lines)+len(priced.FreeItems))
 		for _, l := range lines {
-			item := models.OrderItem{OrderID: order.ID, ProductID: l.ProductID, Name: l.Name, Quantity: l.Quantity, UnitPriceCents: l.PriceCents}
+			items = append(items, models.OrderItem{OrderID: order.ID, ProductID: l.ProductID, Name: l.Name, Quantity: l.Quantity, UnitPriceCents: l.PriceCents})
+		}
+		for _, f := range priced.FreeItems {
+			items = append(items, models.OrderItem{OrderID: order.ID, ProductID: f.ProductID, Name: f.Name, Quantity: f.Quantity, UnitPriceCents: 0})
+		}
+		for _, item := range items {
 			if err := item.Validate(); err != nil {
 				return err
 			}

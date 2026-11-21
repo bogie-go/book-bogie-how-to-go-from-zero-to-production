@@ -141,6 +141,14 @@ async function load() {
     cells[0].textContent = i.name; cells[1].textContent = i.quantity; cells[2].textContent = dollars(i.subtotal_cents);
     body.appendChild(tr);
   }
+  // Free items ship with the order, at no cost.
+  for (const f of cart.free_items || []) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = "<td></td><td></td><td>Free</td>";
+    const cells = tr.querySelectorAll("td");
+    cells[0].textContent = f.name + ' (free with "' + f.rule + '")'; cells[1].textContent = f.quantity;
+    body.appendChild(tr);
+  }
   document.getElementById("subtotal").textContent = dollars(cart.subtotal_cents);
   document.getElementById("rules").innerHTML = cart.applied_rules.map((r) => '<span class="muted"> ' + esc(r.name) + ': -' + dollars(r.discount_cents) + '</span>').join("");
   document.getElementById("total").textContent = dollars(cart.total_cents);

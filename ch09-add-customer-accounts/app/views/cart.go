@@ -20,6 +20,15 @@ type AppliedRuleResponse struct {
 	DiscountCents    int32  `json:"discount_cents"`
 }
 
+// FreeItemResponse is an item a rule added to the cart at no cost.
+type FreeItemResponse struct {
+	ProductID int64  `json:"product_id"`
+	Name      string `json:"name"`
+	ImageUrl  string `json:"image_url"`
+	Quantity  int32  `json:"quantity"`
+	Rule      string `json:"rule"`
+}
+
 // CartResponse is the whole cart: every change to it answers with this.
 type CartResponse struct {
 	Items         []CartLineResponse    `json:"items"`
@@ -27,6 +36,7 @@ type CartResponse struct {
 	DiscountCents int32                 `json:"discount_cents"`
 	TotalCents    int32                 `json:"total_cents"`
 	AppliedRules  []AppliedRuleResponse `json:"applied_rules"`
+	FreeItems     []FreeItemResponse    `json:"free_items"`
 }
 
 // AddCartItemRequest is the body of POST /cart_items.

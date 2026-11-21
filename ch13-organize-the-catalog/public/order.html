@@ -140,7 +140,7 @@ async function load() {
       const tr = document.createElement("tr");
       tr.innerHTML = "<td></td><td></td><td></td><td></td>";
       const cells = tr.querySelectorAll("td");
-      cells[0].textContent = i.name; cells[1].textContent = dollars(i.unit_price_cents);
+      cells[0].textContent = i.name; cells[1].textContent = i.unit_price_cents === 0 ? "Free" : dollars(i.unit_price_cents);
       cells[2].textContent = i.quantity; cells[3].textContent = dollars(i.subtotal_cents);
       body.appendChild(tr);
     }

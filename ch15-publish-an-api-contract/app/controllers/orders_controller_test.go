@@ -1,6 +1,7 @@
 package controllers_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -72,6 +73,22 @@ var _ = Describe("POST /orders", func() {
 		app.Post("/orders", map[string]any{}).As(ada).Do().
 			Status(http.StatusUnprocessableEntity).
 			Contains("the cart is empty")
+	})
+
+	Context("with a buy 2, get 1 free rule on the mug", func() {
+		BeforeEach(func() {
+			factories.PriceRule(GinkgoT(), app.Store, func(r *models.PriceRule) {
+				r.Kind = "buy_x_get_y"
+				r.Properties = json.RawMessage(fmt.Sprintf(`{"product_id":%d,"buy":2,"free":1}`, mug.ID))
+			})
+		})
+
+		It("ships the free mug at no cost, from the same stock", func() {
+			app.Post("/orders", map[string]any{}).As(ada).Do().
+				Status(http.StatusCreated).
+				Contains(`"subtotal_cents":2800,"discount_cents":0,"total_cents":2800`)
+			app.Get(fmt.Sprintf("/products/%d", mug.ID)).Do().Contains(`"stock":0`)
+		})
 	})
 
 	It("refuses a guest", func() {

@@ -61,6 +61,10 @@ func receipt(order models.Order, lines []models.OrderItem) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "Thanks for your order! Here's your receipt.\n\n")
 	for _, l := range lines {
+		if l.UnitPriceCents == 0 {
+			fmt.Fprintf(&b, "%d x %s  free\n", l.Quantity, l.Name)
+			continue
+		}
 		fmt.Fprintf(&b, "%d x %s  %s\n", l.Quantity, l.Name, money(l.UnitPriceCents*l.Quantity))
 	}
 	fmt.Fprintf(&b, "\nSubtotal  %s\n", money(order.SubtotalCents))

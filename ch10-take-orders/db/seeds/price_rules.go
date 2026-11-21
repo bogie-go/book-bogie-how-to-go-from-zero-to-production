@@ -11,7 +11,7 @@ import (
 )
 
 // SeedPriceRules loads the launch promotions: 20% off everything for the
-// launch weekend, and buy two keycaps, get one free, next month.
+// launch weekend, and buy two keycaps, get a third free, next month.
 func SeedPriceRules(ctx context.Context, s *adapter.Store) error {
 	keycap, err := seededProduct(ctx, s, "Bogie Keycap")
 	if err != nil {

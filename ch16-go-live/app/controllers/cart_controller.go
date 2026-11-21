@@ -93,6 +93,7 @@ func cartView(lines []models.CartLine, priced models.PricedCart) views.CartRespo
 		DiscountCents: priced.DiscountCents(),
 		TotalCents:    priced.TotalCents,
 		AppliedRules:  []views.AppliedRuleResponse{},
+		FreeItems:     []views.FreeItemResponse{},
 	}
 	for _, l := range lines {
 		resp.Items = append(resp.Items, views.CartLineResponse{
@@ -106,6 +107,11 @@ func cartView(lines []models.CartLine, priced models.PricedCart) views.CartRespo
 			PriceBeforeCents: a.BeforeCents,
 			PriceAfterCents:  a.AfterCents,
 			DiscountCents:    a.BeforeCents - a.AfterCents,
+		})
+	}
+	for _, f := range priced.FreeItems {
+		resp.FreeItems = append(resp.FreeItems, views.FreeItemResponse{
+			ProductID: f.ProductID, Name: f.Name, ImageUrl: f.ImageUrl, Quantity: f.Quantity, Rule: f.Rule,
 		})
 	}
 	return resp
