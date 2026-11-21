@@ -10,17 +10,25 @@ import (
 	"depot/app/models"
 )
 
-// ListActivePriceRules lists the rules running now, in the order they apply.
-func (s *Store) ListActivePriceRules(ctx context.Context) ([]models.PriceRule, error) {
+// ListActivePriceRules loads the rules running now, in the order they apply,
+// each as the kind of rule its row names. A row that won't load is skipped and
+// reported in skipped, so one bad row can't stop every cart.
+func (s *Store) ListActivePriceRules(ctx context.Context) (
+	rules []models.Rule, skipped []error, err error,
+) {
 	rows, err := s.q.ListActivePriceRules(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("store: active price rules: %w", err)
+		return nil, nil, fmt.Errorf("store: active price rules: %w", err)
 	}
-	rules := make([]models.PriceRule, 0, len(rows))
-	for _, r := range rows {
-		rules = append(rules, priceRuleFromRow(r))
+	for _, row := range rows {
+		rule, err := models.NewRule(priceRuleFromRow(row))
+		if err != nil {
+			skipped = append(skipped, fmt.Errorf("price rule %q: %w", row.Name, err))
+			continue
+		}
+		rules = append(rules, rule)
 	}
-	return rules, nil
+	return rules, skipped, nil
 }
 
 // FindOrCreatePriceRuleByName returns the rule named r.Name, creating it

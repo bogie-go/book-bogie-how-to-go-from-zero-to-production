@@ -10,17 +10,25 @@ import (
 	"depot/app/models"
 )
 
-// ListActivePriceRules lists the rules running now, in the order they apply.
-func (s *Store) ListActivePriceRules(ctx context.Context) ([]models.PriceRule, error) {
+// ListActivePriceRules loads the rules running now, in the order they apply,
+// each as the kind of rule its row names. A row that won't load is skipped and
+// reported in skipped, so one bad row can't stop every cart.
+func (s *Store) ListActivePriceRules(ctx context.Context) (
+	rules []models.Rule, skipped []error, err error,
+) {
 	rows, err := s.q.ListActivePriceRules(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("store: active price rules: %w", err)
+		return nil, nil, fmt.Errorf("store: active price rules: %w", err)
 	}
-	rules := make([]models.PriceRule, 0, len(rows))
-	for _, r := range rows {
-		rules = append(rules, priceRuleFromRow(r))
+	for _, row := range rows {
+		rule, err := models.NewRule(priceRuleFromRow(row))
+		if err != nil {
+			skipped = append(skipped, fmt.Errorf("price rule %q: %w", row.Name, err))
+			continue
+		}
+		rules = append(rules, rule)
 	}
-	return rules, nil
+	return rules, skipped, nil
 }
 
 // FindOrCreatePriceRuleByName returns the rule named r.Name, creating it from
@@ -37,14 +45,19 @@ func (s *Store) FindOrCreatePriceRuleByName(ctx context.Context, r models.PriceR
 	}
 }
 
-// CouponRule finds the running price rule a coupon code unlocks.
-func (s *Store) CouponRule(ctx context.Context, code string) (models.PriceRule, error) {
+// CouponRule loads the running price rule a coupon code unlocks, as the kind
+// of rule its row names.
+func (s *Store) CouponRule(ctx context.Context, code string) (models.Rule, error) {
 	row, err := s.q.GetActivePriceRuleByCouponCode(ctx, code)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return models.PriceRule{}, models.ErrNotFound
+		return nil, models.ErrNotFound
 	}
 	if err != nil {
-		return models.PriceRule{}, fmt.Errorf("store: coupon rule: %w", err)
+		return nil, fmt.Errorf("store: coupon rule: %w", err)
 	}
-	return priceRuleFromRow(row.PriceRule), nil
+	rule, err := models.NewRule(priceRuleFromRow(row.PriceRule))
+	if err != nil {
+		return nil, fmt.Errorf("store: coupon rule %q: %w", row.PriceRule.Name, err)
+	}
+	return rule, nil
 }

@@ -16,7 +16,7 @@ import (
 // cartReader is what every cart response needs from the store.
 type cartReader interface {
 	CartContents(ctx context.Context, cartID int64) ([]models.CartLine, error)
-	ListActivePriceRules(ctx context.Context) ([]models.PriceRule, error)
+	ListActivePriceRules(ctx context.Context) (rules []models.Rule, skipped []error, err error)
 }
 
 type cartStore interface {
@@ -73,15 +73,15 @@ func respondWithCart(c *gin.Context, store cartReader, log *slog.Logger, cartID 
 		failCart(c, log, err)
 		return
 	}
-	rules, err := store.ListActivePriceRules(ctx)
+	rules, skipped, err := store.ListActivePriceRules(ctx)
 	if err != nil {
 		failCart(c, log, err)
 		return
 	}
-	priced := models.PriceCart(lines, rules)
-	for _, skipped := range priced.Skipped {
-		log.WarnContext(ctx, "cart: skipped a price rule", "err", skipped, "request_id", c.GetString("request_id"))
+	for _, s := range skipped {
+		log.WarnContext(ctx, "cart: skipped a price rule", "err", s, "request_id", c.GetString("request_id"))
 	}
+	priced := models.PriceCart(lines, rules)
 	c.JSON(http.StatusOK, cartView(lines, priced))
 }
 

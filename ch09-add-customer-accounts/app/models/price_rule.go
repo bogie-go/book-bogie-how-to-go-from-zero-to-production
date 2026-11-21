@@ -32,7 +32,7 @@ func (r PriceRule) Validate() error {
 	if !r.EndsAt.After(r.StartsAt) {
 		return fmt.Errorf("%w: a rule must end after it starts", ErrInvalid)
 	}
-	if _, err := r.Rule(); err != nil {
+	if _, err := NewRule(r); err != nil {
 		return fmt.Errorf("%w: %v", ErrInvalid, err)
 	}
 	return nil

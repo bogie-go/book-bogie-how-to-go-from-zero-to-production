@@ -22,10 +22,10 @@ import (
 
 type ordersStore interface {
 	FindOrCreateCartByToken(ctx context.Context, token string) (models.Cart, error)
-	ListActivePriceRules(ctx context.Context) ([]models.PriceRule, error)
-	CouponRule(ctx context.Context, code string) (models.PriceRule, error)
+	ListActivePriceRules(ctx context.Context) (rules []models.Rule, skipped []error, err error)
+	CouponRule(ctx context.Context, code string) (models.Rule, error)
 	FindOrderForUser(ctx context.Context, id string, userID int64) (models.Order, error)
-	PlaceOrder(ctx context.Context, userID, cartID int64, rules []models.PriceRule, after adapter.AfterOrder) (models.Order, error)
+	PlaceOrder(ctx context.Context, userID, cartID int64, rules []models.Rule, after adapter.AfterOrder) (models.Order, error)
 	OrderLines(ctx context.Context, orderID int64) ([]models.OrderItem, error)
 }
 
@@ -93,10 +93,13 @@ func (ctl *OrdersController) Create(c *gin.Context) {
 		ctl.fail(c, err)
 		return
 	}
-	rules, err := ctl.Store.ListActivePriceRules(ctx)
+	rules, skipped, err := ctl.Store.ListActivePriceRules(ctx)
 	if err != nil {
 		ctl.fail(c, err)
 		return
+	}
+	for _, s := range skipped {
+		ctl.Log.WarnContext(ctx, "orders: skipped a price rule", "err", s, "request_id", c.GetString("request_id"))
 	}
 	if code := models.NormalizeCouponCode(req.CouponCode); code != "" {
 		rule, err := ctl.Store.CouponRule(ctx, code)
@@ -109,7 +112,9 @@ func (ctl *OrdersController) Create(c *gin.Context) {
 			return
 		}
 		rules = append(rules, rule)
-		slices.SortStableFunc(rules, func(a, b models.PriceRule) int { return cmp.Compare(a.Priority, b.Priority) })
+		slices.SortStableFunc(rules, func(a, b models.Rule) int {
+			return cmp.Compare(a.Info().Priority, b.Info().Priority)
+		})
 	}
 	order, err := ctl.Store.PlaceOrder(ctx, userID, cart.ID, rules,
 		func(ctx context.Context, tx pgx.Tx, order models.Order) error {
