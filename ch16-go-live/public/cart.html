@@ -29,6 +29,10 @@ th, td { text-align:left; padding:.5rem; border-bottom:1px solid var(--line); }
 .detail { display:grid; grid-template-columns:minmax(200px,360px) 1fr; gap:1.5rem; }
 .detail img { width:100%; border-radius:8px; border:1px solid var(--line); }
 @media (max-width:640px){ .detail{grid-template-columns:1fr;} }
+.free td { color:var(--muted); }
+.free .item { color:var(--fg); }
+.free .rule { display:block; font-size:.85rem; color:var(--muted); }
+.free .price { color:var(--accent); }
 .summary { display:flex; justify-content:space-between; align-items:baseline; gap:1rem; padding:.5rem; border-bottom:1px solid var(--line); }
 .summary .label { color:var(--muted); }
 .summary.total { border-bottom:0; font-size:1.2rem; font-weight:700; }
@@ -150,6 +154,19 @@ function render(cart) {
     tr.querySelector(".dec").addEventListener("click", () => change(i.id, i.quantity - 1));
     tr.querySelector(".inc").addEventListener("click", () => change(i.id, i.quantity + 1));
     tr.querySelector(".remove").addEventListener("click", (e) => { e.preventDefault(); remove(i.id); });
+    body.appendChild(tr);
+  }
+  // Free items: what the rules gave away, below the items the customer chose.
+  // The customer doesn't add or remove them: they follow from the cart.
+  for (const f of cart.free_items || []) {
+    const tr = document.createElement("tr");
+    tr.className = "free";
+    tr.innerHTML = '<td><img alt="" width="48"></td><td class="item"><span></span><span class="rule"></span></td>' +
+      '<td class="price">Free</td><td></td><td>$0.00</td><td></td>';
+    tr.querySelector("img").src = f.image_url;
+    tr.querySelector(".item span").textContent = f.name;
+    tr.querySelector(".rule").textContent = 'free with "' + f.rule + '"';
+    tr.querySelectorAll("td")[3].textContent = f.quantity;
     body.appendChild(tr);
   }
   renderSummary(cart);

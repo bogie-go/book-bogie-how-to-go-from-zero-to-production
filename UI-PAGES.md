@@ -51,7 +51,7 @@ The shared script block now gets a guest token (`POST /guest_sessions`), keeps i
 
 | File | What it is | Status |
 | --- | --- | --- |
-| `cart.html` | Shows Subtotal, one row per applied rule (`$68.00 → $54.40`, from `price_before_cents` and `price_after_cents`), and Total. | CHANGED |
+| `cart.html` | Shows the free items from `free_items` below the customer's lines ("Free", with `free with "<rule>"`), then Subtotal, one row per applied rule (`$50.00 → $40.00`, from `price_before_cents` and `price_after_cents`), and Total. | CHANGED |
 | `index.html`, `product.html` | No change from Chapter 7. | same |
 
 ## Chapter 9: Add Customer Accounts (`ch09-add-customer-accounts/public/`)
@@ -68,8 +68,8 @@ The shared script block now gets a guest token (`POST /guest_sessions`), keeps i
 
 | File | What it is | Status |
 | --- | --- | --- |
-| `checkout.html` | Checkout: order summary, optional coupon code, "Place order" (`POST /orders`). | NEW |
-| `order.html` | Order confirmation / detail (`?id=`), `GET /orders/:id`. | NEW |
+| `checkout.html` | Checkout: order summary (free items listed as free), optional coupon code, "Place order" (`POST /orders`). | NEW |
+| `order.html` | Order confirmation / detail (`?id=`), `GET /orders/:id`. A line with a unit price of 0 shows "Free". | NEW |
 | `cart.html` | Adds a "Check out" button, shown only when the cart has items. | CHANGED |
 | `index.html`, `product.html`, `signin.html`, `signup.html` | No change from Chapter 9. | same |
 
