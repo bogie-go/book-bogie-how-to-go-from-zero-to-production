@@ -143,7 +143,7 @@ function render(cart) {
   showBadge(cart);
 }
 // renderSummary shows the cart's price coming down: the subtotal, one row per
-// applied rule with the price before and after it, and the total.
+// rule that lowered the price with the price before and after it, and the total.
 function renderSummary(cart) {
   const summary = document.getElementById("summary");
   summary.innerHTML = "";
@@ -156,9 +156,9 @@ function renderSummary(cart) {
     cells[1].textContent = value;
     summary.appendChild(div);
   };
-  const rules = cart.applied_rules || [];
-  if (rules.length > 0) row("Subtotal", dollars(cart.subtotal_cents));
-  for (const r of rules) {
+  const steps = (cart.applied_rules || []).filter(r => r.discount_cents > 0);
+  if (steps.length > 0) row("Subtotal", dollars(cart.subtotal_cents));
+  for (const r of steps) {
     row(r.name, dollars(r.price_before_cents) + " \u2192 " + dollars(r.price_after_cents));
   }
   row("Total", dollars(cart.total_cents), "total");

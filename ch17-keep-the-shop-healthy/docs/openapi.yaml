@@ -305,7 +305,7 @@ components:
         name: { type: string }
         price_before_cents: { type: integer, minimum: 0 }
         price_after_cents: { type: integer, minimum: 0 }
-        discount_cents: { type: integer, minimum: 1 }
+        discount_cents: { type: integer, minimum: 0 }
 
     FreeItem:
       type: object

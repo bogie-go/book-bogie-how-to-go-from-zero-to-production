@@ -16,7 +16,7 @@ import (
 // PlaceOrder turns a customer's cart into an order, in one transaction: it
 // takes every line out of stock, writes the order and its lines with today's
 // prices, and empties the cart. If any step fails, none of them happened.
-func (s *Store) PlaceOrder(ctx context.Context, userID, cartID int64, rules []models.PriceRule) (models.Order, error) {
+func (s *Store) PlaceOrder(ctx context.Context, userID, cartID int64, rules []models.Rule) (models.Order, error) {
 	var order models.Order
 	err := s.withTx(ctx, func(_ pgx.Tx, q *sqlc.Queries) error {
 		if _, err := q.LockCart(ctx, cartID); err != nil {

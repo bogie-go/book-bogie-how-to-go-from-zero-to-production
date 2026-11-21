@@ -39,7 +39,9 @@ var _ = Describe("GET /cart", func() {
 
 		app.Get("/cart").As("guest:1").Do().
 			Status(http.StatusOK).
-			Contains(`"subtotal_cents":3600,"discount_cents":0,"total_cents":3600,"applied_rules":[],` +
+			Contains(`"subtotal_cents":3600,"discount_cents":0,"total_cents":3600,` +
+				`"applied_rules":[{"name":"Keycaps: buy 2, get 1 free",` +
+				`"price_before_cents":3600,"price_after_cents":3600,"discount_cents":0}],` +
 				fmt.Sprintf(`"free_items":[{"product_id":%d,"name":"Bogie Keycap",`, keycap.ID) +
 				`"image_url":"/images/products/bogie-keycap.webp","quantity":1,"rule":"Keycaps: buy 2, get 1 free"}]`)
 	})

@@ -7,13 +7,22 @@ import (
 )
 
 // PriceContext is what flows through the pricing pipeline: the cart's lines,
-// what they cost before any rule, the price so far, and the items the rules
-// have given away so far.
+// what they cost before any rule, the price so far, and what the rules have
+// done so far: the steps they recorded, and the items they gave away.
 type PriceContext struct {
 	Lines         []CartLine
 	OriginalCents int32
 	CurrentCents  int32
+	AppliedRules  []AppliedRule
 	FreeItems     []FreeItem
+}
+
+// AppliedRule is what one rule did: its name, and the price before and after
+// it.
+type AppliedRule struct {
+	Name        string
+	BeforeCents int32
+	AfterCents  int32
 }
 
 // FreeItem is something a rule adds to the cart at no cost.
@@ -26,12 +35,23 @@ type FreeItem struct {
 	Rule string
 }
 
+// RuleInfo is what every kind of rule carries from its row.
+type RuleInfo struct {
+	Name     string
+	Priority int32
+}
+
+// Info returns the rule's name and priority.
+func (i RuleInfo) Info() RuleInfo { return i }
+
 // Rule is one step in the pricing pipeline. Apply takes the cart as it
-// stands, in ctx, and returns it as the rule leaves it. Each kind of rule is
-// its own struct, and knows which of its own settings make sense.
+// stands, in ctx, decides whether the rule applies, and returns the cart as
+// the rule leaves it, with a note of what it did. Each kind of rule is its own
+// struct, and knows which of its own settings make sense.
 type Rule interface {
 	Apply(ctx PriceContext) PriceContext
 	Validate() error
+	Info() RuleInfo
 }
 
 // subtotal is what the lines cost before any rule.
@@ -45,12 +65,19 @@ func subtotal(lines []CartLine) int32 {
 
 // PercentageDiscount takes a percentage off the price so far.
 type PercentageDiscount struct {
+	RuleInfo   `json:"-"`
 	Percentage int32 `json:"percentage"`
 }
 
 func (r PercentageDiscount) Apply(ctx PriceContext) PriceContext {
 	discount := int32(int64(ctx.CurrentCents) * int64(r.Percentage) / 100)
+	if discount == 0 {
+		return ctx
+	}
+	before := ctx.CurrentCents
 	ctx.CurrentCents -= discount
+	ctx.AppliedRules = append(ctx.AppliedRules,
+		AppliedRule{Name: r.Name, BeforeCents: before, AfterCents: ctx.CurrentCents})
 	return ctx
 }
 
@@ -65,6 +92,7 @@ func (r PercentageDiscount) Validate() error {
 // customer gets Free more of it, at no cost. It adds them to the free items,
 // and leaves the price alone.
 type BuyXGetY struct {
+	RuleInfo  `json:"-"`
 	ProductID int64 `json:"product_id"`
 	Buy       int32 `json:"buy"`
 	Free      int32 `json:"free"`
@@ -75,12 +103,17 @@ func (r BuyXGetY) Apply(ctx PriceContext) PriceContext {
 		if l.ProductID != r.ProductID {
 			continue
 		}
-		if free := l.Quantity / r.Buy * r.Free; free > 0 {
-			ctx.FreeItems = append(ctx.FreeItems, FreeItem{
-				ProductID: l.ProductID, Name: l.Name, ImageUrl: l.ImageUrl, Quantity: free,
-			})
+		free := l.Quantity / r.Buy * r.Free
+		if free == 0 {
+			return ctx
 		}
-		break
+		ctx.FreeItems = append(ctx.FreeItems, FreeItem{
+			ProductID: l.ProductID, Name: l.Name, ImageUrl: l.ImageUrl,
+			Quantity: free, Rule: r.Name,
+		})
+		ctx.AppliedRules = append(ctx.AppliedRules,
+			AppliedRule{Name: r.Name, BeforeCents: ctx.CurrentCents, AfterCents: ctx.CurrentCents})
+		return ctx
 	}
 	return ctx
 }
@@ -95,14 +128,20 @@ func (r BuyXGetY) Validate() error {
 // MinimumPurchase takes a fixed amount off, once the price so far reaches
 // a minimum.
 type MinimumPurchase struct {
+	RuleInfo      `json:"-"`
 	MinimumCents  int32 `json:"minimum_cents"`
 	DiscountCents int32 `json:"discount_cents"`
 }
 
 func (r MinimumPurchase) Apply(ctx PriceContext) PriceContext {
-	if ctx.CurrentCents >= r.MinimumCents {
-		ctx.CurrentCents -= r.DiscountCents
+	discount := min(r.DiscountCents, ctx.CurrentCents)
+	if ctx.CurrentCents < r.MinimumCents || discount == 0 {
+		return ctx
 	}
+	before := ctx.CurrentCents
+	ctx.CurrentCents -= discount
+	ctx.AppliedRules = append(ctx.AppliedRules,
+		AppliedRule{Name: r.Name, BeforeCents: before, AfterCents: ctx.CurrentCents})
 	return ctx
 }
 
@@ -113,21 +152,23 @@ func (r MinimumPurchase) Validate() error {
 	return nil
 }
 
-// Rule turns a price rule's row into the rule its kind names, with the row's
-// properties decoded into that rule's settings and checked.
-func (r PriceRule) Rule() (Rule, error) {
+// NewRule builds the rule a row's kind names, with the row's name and
+// priority, and its properties decoded into that rule's settings and checked.
+// It's what ActiveRecord does for you when it reads a type column.
+func NewRule(pr PriceRule) (Rule, error) {
+	info := RuleInfo{Name: pr.Name, Priority: pr.Priority}
 	var rule Rule
-	switch r.Kind {
+	switch pr.Kind {
 	case "percentage_discount":
-		rule = &PercentageDiscount{}
+		rule = &PercentageDiscount{RuleInfo: info}
 	case "buy_x_get_y":
-		rule = &BuyXGetY{}
+		rule = &BuyXGetY{RuleInfo: info}
 	case "minimum_purchase":
-		rule = &MinimumPurchase{}
+		rule = &MinimumPurchase{RuleInfo: info}
 	default:
-		return nil, fmt.Errorf("unknown kind %q", r.Kind)
+		return nil, fmt.Errorf("unknown kind %q", pr.Kind)
 	}
-	if err := decodeStrict(r.Properties, rule); err != nil {
+	if err := decodeStrict(pr.Properties, rule); err != nil {
 		return nil, err
 	}
 	if err := rule.Validate(); err != nil {
@@ -144,14 +185,6 @@ func decodeStrict(data []byte, v any) error {
 	return dec.Decode(v)
 }
 
-// AppliedRule is one step of the pipeline: a rule, and the price before and
-// after it.
-type AppliedRule struct {
-	Name        string
-	BeforeCents int32
-	AfterCents  int32
-}
-
 // PricedCart is a cart's price, worked out rule by rule, and what the rules
 // gave away.
 type PricedCart struct {
@@ -159,8 +192,6 @@ type PricedCart struct {
 	TotalCents    int32
 	Applied       []AppliedRule
 	FreeItems     []FreeItem
-	// Skipped holds an error for each rule that wouldn't load.
-	Skipped []error
 }
 
 // DiscountCents is everything the rules took off, together.
@@ -169,31 +200,17 @@ func (p PricedCart) DiscountCents() int32 {
 }
 
 // PriceCart passes a cart through its rules, in order: each rule starts from
-// the cart the one before it left. No rule can take the price below zero or
-// raise it, only rules that lowered it are recorded as steps, every free item
-// is named after the rule that gave it, and a rule that won't load is
-// skipped, never fatal.
-func PriceCart(lines []CartLine, rules []PriceRule) PricedCart {
+// the cart the one before it left.
+func PriceCart(lines []CartLine, rules []Rule) PricedCart {
 	ctx := PriceContext{Lines: lines, OriginalCents: subtotal(lines)}
 	ctx.CurrentCents = ctx.OriginalCents
-	priced := PricedCart{SubtotalCents: ctx.OriginalCents, Applied: []AppliedRule{}}
-	for _, pr := range rules {
-		rule, err := pr.Rule()
-		if err != nil {
-			priced.Skipped = append(priced.Skipped, fmt.Errorf("price rule %q: %w", pr.Name, err))
-			continue
-		}
-		next := rule.Apply(ctx)
-		next.CurrentCents = min(max(next.CurrentCents, 0), ctx.CurrentCents)
-		if next.CurrentCents < ctx.CurrentCents {
-			priced.Applied = append(priced.Applied, AppliedRule{Name: pr.Name, BeforeCents: ctx.CurrentCents, AfterCents: next.CurrentCents})
-		}
-		for i := len(ctx.FreeItems); i < len(next.FreeItems); i++ {
-			next.FreeItems[i].Rule = pr.Name
-		}
-		ctx = next
+	for _, rule := range rules {
+		ctx = rule.Apply(ctx)
 	}
-	priced.TotalCents = ctx.CurrentCents
-	priced.FreeItems = ctx.FreeItems
-	return priced
+	return PricedCart{
+		SubtotalCents: ctx.OriginalCents,
+		TotalCents:    ctx.CurrentCents,
+		Applied:       ctx.AppliedRules,
+		FreeItems:     ctx.FreeItems,
+	}
 }

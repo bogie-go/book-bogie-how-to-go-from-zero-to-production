@@ -44,16 +44,14 @@ var _ = Describe("BuyXGetY", func() {
 })
 
 var _ = Describe("PriceCart", func() {
-	rule := func(name, kind, properties string) models.PriceRule {
-		return models.PriceRule{Name: name, Kind: kind, Properties: []byte(properties)}
-	}
-	twentyOff := rule("20% off", "percentage_discount", `{"percentage":20}`)
-	tenOff := rule("10% off", "percentage_discount", `{"percentage":10}`)
-	keycapFree := rule("Keycaps", "buy_x_get_y", `{"product_id":5,"buy":2,"free":1}`)
+	named := func(name string) models.RuleInfo { return models.RuleInfo{Name: name} }
+	twentyOff := models.PercentageDiscount{RuleInfo: named("20% off"), Percentage: 20}
+	tenOff := models.PercentageDiscount{RuleInfo: named("10% off"), Percentage: 10}
+	keycapFree := models.BuyXGetY{RuleInfo: named("Keycaps"), ProductID: 5, Buy: 2, Free: 1}
 	keycaps := []models.CartLine{{ProductID: 5, Name: "Keycap", PriceCents: 1800, Quantity: 3}}
 
 	It("passes the price from rule to rule, and records each step", func() {
-		priced := models.PriceCart(keycaps, []models.PriceRule{twentyOff, tenOff})
+		priced := models.PriceCart(keycaps, []models.Rule{twentyOff, tenOff})
 		Expect(priced.Applied).To(Equal([]models.AppliedRule{
 			{Name: "20% off", BeforeCents: 5400, AfterCents: 4320},
 			{Name: "10% off", BeforeCents: 4320, AfterCents: 3888},
@@ -63,43 +61,44 @@ var _ = Describe("PriceCart", func() {
 	})
 
 	It("gives free items, named after their rule, at no cost", func() {
-		priced := models.PriceCart(keycaps, []models.PriceRule{twentyOff, keycapFree})
+		priced := models.PriceCart(keycaps, []models.Rule{twentyOff, keycapFree})
 		Expect(priced.FreeItems).To(Equal([]models.FreeItem{{ProductID: 5, Name: "Keycap", Quantity: 1, Rule: "Keycaps"}}))
-		Expect(priced.Applied).To(Equal([]models.AppliedRule{{Name: "20% off", BeforeCents: 5400, AfterCents: 4320}}))
+		Expect(priced.Applied).To(Equal([]models.AppliedRule{
+			{Name: "20% off", BeforeCents: 5400, AfterCents: 4320},
+			{Name: "Keycaps", BeforeCents: 4320, AfterCents: 4320},
+		}))
 	})
 
 	It("gives the same price whichever runs first, a free item or a discount", func() {
-		first := models.PriceCart(keycaps, []models.PriceRule{twentyOff, keycapFree})
-		second := models.PriceCart(keycaps, []models.PriceRule{keycapFree, twentyOff})
+		first := models.PriceCart(keycaps, []models.Rule{twentyOff, keycapFree})
+		second := models.PriceCart(keycaps, []models.Rule{keycapFree, twentyOff})
 		Expect(first.TotalCents).To(Equal(int32(4320)))
 		Expect(second.TotalCents).To(Equal(first.TotalCents))
 	})
 
 	It("records only the rules that did something", func() {
 		stickers := []models.CartLine{{ProductID: 1, PriceCents: 300, Quantity: 2}}
-		priced := models.PriceCart(stickers, []models.PriceRule{twentyOff, keycapFree})
+		priced := models.PriceCart(stickers, []models.Rule{twentyOff, keycapFree})
 		Expect(priced.Applied).To(Equal([]models.AppliedRule{{Name: "20% off", BeforeCents: 600, AfterCents: 480}}))
 		Expect(priced.FreeItems).To(BeEmpty())
 	})
 
-	It("skips a rule that won't load, and applies the rest", func() {
-		broken := rule("Broken", "percentage_discount", `{"percentage":"ten"}`)
-		priced := models.PriceCart(keycaps, []models.PriceRule{broken, twentyOff})
-		Expect(priced.Skipped).To(HaveLen(1))
-		Expect(priced.TotalCents).To(Equal(int32(4320)))
-	})
-
 	It("gives a different price when two discounts run in another order", func() {
-		fiveOff := rule("$5 off $40", "minimum_purchase", `{"minimum_cents":4000,"discount_cents":500}`)
+		fiveOff := models.MinimumPurchase{RuleInfo: named("$5 off $40"), MinimumCents: 4000, DiscountCents: 500}
 		cart := []models.CartLine{{ProductID: 2, PriceCents: 4500, Quantity: 1}}
-		Expect(models.PriceCart(cart, []models.PriceRule{twentyOff, fiveOff}).TotalCents).To(Equal(int32(3600)))
-		Expect(models.PriceCart(cart, []models.PriceRule{fiveOff, twentyOff}).TotalCents).To(Equal(int32(3200)))
+		Expect(models.PriceCart(cart, []models.Rule{twentyOff, fiveOff}).TotalCents).To(Equal(int32(3600)))
+		Expect(models.PriceCart(cart, []models.Rule{fiveOff, twentyOff}).TotalCents).To(Equal(int32(3200)))
 	})
 
 	It("never takes the price below zero", func() {
-		fiveOffAnything := rule("$5 off", "minimum_purchase", `{"minimum_cents":0,"discount_cents":500}`)
+		fiveOffAnything := models.MinimumPurchase{RuleInfo: named("$5 off"), MinimumCents: 0, DiscountCents: 500}
 		sticker := []models.CartLine{{ProductID: 1, PriceCents: 300, Quantity: 1}}
-		Expect(models.PriceCart(sticker, []models.PriceRule{fiveOffAnything}).TotalCents).To(BeZero())
+		Expect(models.PriceCart(sticker, []models.Rule{fiveOffAnything}).TotalCents).To(BeZero())
+	})
+
+	It("records nothing when a minimum of 0 runs on an empty cart", func() {
+		fiveOffAnything := models.MinimumPurchase{RuleInfo: named("$5 off"), MinimumCents: 0, DiscountCents: 500}
+		Expect(models.PriceCart(nil, []models.Rule{fiveOffAnything}).Applied).To(BeEmpty())
 	})
 })
 

@@ -20,7 +20,7 @@ type AfterOrder func(ctx context.Context, tx pgx.Tx, order models.Order) error
 // PlaceOrder turns a customer's cart into an order, in one transaction: it
 // takes every line out of stock, writes the order and its lines with today's
 // prices, and empties the cart. If any step fails, none of them happened.
-func (s *Store) PlaceOrder(ctx context.Context, userID, cartID int64, rules []models.PriceRule, after AfterOrder) (models.Order, error) {
+func (s *Store) PlaceOrder(ctx context.Context, userID, cartID int64, rules []models.Rule, after AfterOrder) (models.Order, error) {
 	var order models.Order
 	err := s.withTx(ctx, func(tx pgx.Tx, q *sqlc.Queries) error {
 		if _, err := q.LockCart(ctx, cartID); err != nil {
