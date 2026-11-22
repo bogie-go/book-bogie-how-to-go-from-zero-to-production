@@ -29,5 +29,5 @@ make test
 - The cart is one shared cart for every visitor at this point (the shared token is an empty string). Chapter 7 gives each visitor their own.
 - Try it: `curl -X POST localhost:8080/cart_items -d '{"product_id": 3, "quantity": 1}'` and `curl localhost:8080/cart` (use a product id from `GET /products`).
 - `public/index.html`, `public/product.html` and `public/cart.html` are the updated pages the chapter says to copy from the companion repo (this chapter's `public/`): a cart badge, an "Add to cart" button, and a cart page with a quantity stepper, a remove link and the total. The book does not print them, so they are written for this repo as plain HTML with inline CSS and script.
-- The cart migrations are `20261104094512_create_carts`, `20261104094513_create_cart_items`, and `20261104094524_add_unique_product_per_cart`, after Chapter 4's `create_products`. The book prints `20261031071536`, `20261031071537`, and `20261031071548`. The SQL is the book's. Bogie refuses a migration older than one already applied.
+- The cart migrations match the book's listings: `20261031071536_create_carts.sql`, `20261031071537_create_cart_items.sql`, and `20261031071548_add_unique_product_per_cart.sql`, after `20261031071211_create_products.sql`.
 - `bin/ci` passes.

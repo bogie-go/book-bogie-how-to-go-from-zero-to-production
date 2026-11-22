@@ -29,4 +29,4 @@ make test
 - Tests: `bin/ci` runs every check (it needs golangci-lint: `go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest`). `bin/ci` passes at the end of this chapter.
 - The suite runs with `make test` or `bogie test`, not plain `go test ./...` (the packages share one test database).
 - Built on the Chapter 4 app. The chapter adds the request test that locks the field names the pages read (`price_cents`) and the test that a database failure is a 500 whose body does not contain the pool error. The deliberate `PriceCents < 0` mistake is already fixed: the rule reads `p.PriceCents <= 0`.
-- `create_products` keeps Chapter 4's timestamp `20261104093443`. The book prints `20261031071211`. The SQL is the book's.
+- `create_products` is `20261031071211_create_products.sql`, matching the book's listing. A fresh `bogie g model` writes a new timestamp; if you generate yours, it will differ.

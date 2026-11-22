@@ -137,24 +137,40 @@ Checked by running Bogie v0.6.8 (`bogie new`, every generator command in the sho
 
 - Seven `[SCREENSHOT NEEDED]` placeholders, now named for the new chapters: Chapter 1 `ch01-welcome.png`, Chapter 3 `ch03-catalog.png`, Chapter 6 `ch06-add-to-cart.png`, Chapter 8 `ch08-sale.png`, Chapter 11 `ch11-admin.png`, Chapter 13 `ch13-categories.png`, Chapter 14 `ch14-mailpit.png`. The files are in [`screenshots/`](screenshots/).
 
-## Chapters 5–17: migration timestamps (2026-11-06)
+## Chapters 1–17: migration timestamps (resolved 2026-11-22)
 
-The manuscripts print the timestamps from the writing machine (`20261031071211_create_products`, `20261031071536_create_carts`, `20261031072133_create_price_rules`, `20261031072640_create_users`, `20261031073237_create_orders`, `20261031073941_add_role_to_users`, `20261031074654_add_archived_at_to_products`, `20261031075305_create_product_categories`, and the files between them).
+The manuscripts print the timestamps from the writing machine. This repo now uses those same filenames, one chain shared across every Depot folder, so a database prepared in an earlier chapter can take the next chapter's migrations:
 
-This repo keeps one chain so a database prepared in an earlier chapter can take the next chapter's migrations. Bogie refuses a migration older than one already applied. Chapter 4's `create_products` is `20261104093443`. Chapter 8's cart tables and `create_price_rules` follow it (`20261104094512` through `20261104094600`). Chapters 9 through 17 continue from there (`20261104094700_create_users` through `20261104095300_create_product_categories`). The SQL in each file is the SQL the book prints. Each chapter README lists the names that folder uses.
+- `20261031071211_create_products.sql`
+- `20261031071536_create_carts.sql`
+- `20261031071537_create_cart_items.sql`
+- `20261031071548_add_unique_product_per_cart.sql`
+- `20261031072133_create_price_rules.sql`
+- `20261031072640_create_users.sql`
+- `20261031073237_create_orders.sql`
+- `20261031073238_create_order_items.sql`
+- `20261031073600_create_coupons.sql`
+- `20261031073941_add_role_to_users.sql`
+- `20261031074654_add_archived_at_to_products.sql`
+- `20261031075000_create_categories.sql`
+- `20261031075305_create_product_categories.sql`
+
+The names with a printed book listing match it exactly. `create_users` and `create_orders` use the writing-machine timestamps recorded here when the listings were not in the current manuscript; `create_order_items`, `create_coupons`, and `create_categories` (also unlisted) sit in the gaps, in the same order, without colliding. The SQL in each file is still the SQL the book prints. A fresh `bogie g` writes a new timestamp, so a reader who generates the app themselves will still see a different name.
+
+Until 2026-11-22 this repo used a later `20261104…` chain (`20261104093443_create_products` through `20261104095300_create_product_categories`) so the files would apply on top of a database that already had the generated names. Those older names are gone. If a local database still has them, re-prepare it: Bogie refuses a migration older than one already applied.
 
 ## Chapters 1–3, checked against Bogie v0.6.8 (2026-11-04)
 
 Regenerated with `bogie new depot`, `bogie g model product name description:text price_cents:integer stock:integer image_url`, `bogie g scaffold_controller products --only index,show`, and `bogie g seed products`. `go build`, `go vet`, and `bogie test` pass for Chapters 1 and 3. Chapter 2's six scratch programs print what the chapter shows.
 
-What matched: generator file lists for `g model` and `scaffold_controller` (the migration timestamp differs, and the chapter says it will); `GET /healthz` is `ok`; an empty catalog is `{"products":[]}`; the two inserted products come back newest first, and `GET /products/1` matches the printed JSON, including `created_at` and `updated_at`; after Chapter 3's view edit those two fields are gone; `GET /products/nope` and `GET /products/999` are both `{"status":"error","error":"no such product"}` with status 404; seeding twice leaves `count(*) = 7`, with Chapter 1's two rows at the end of the newest-first list; `\d products` matches the printed table; the welcome page shows the app name, `development`, `:8080`, and the Go version.
+What matched: generator file lists for `g model` and `scaffold_controller` (as of this 2026-11-04 check the migration timestamp differed; the repo later adopted the book's filename); `GET /healthz` is `ok`; an empty catalog is `{"products":[]}`; the two inserted products come back newest first, and `GET /products/1` matches the printed JSON, including `created_at` and `updated_at`; after Chapter 3's view edit those two fields are gone; `GET /products/nope` and `GET /products/999` are both `{"status":"error","error":"no such product"}` with status 404; seeding twice leaves `count(*) = 7`, with Chapter 1's two rows at the end of the newest-first list; `\d products` matches the printed table; the welcome page shows the app name, `development`, `:8080`, and the Go version.
 
 What does not match the printed sample, or only matches in a particular setup:
 
 - **`bogie routes`** prints two configuration lines, then Gin's debug-mode warning (`Running in "debug" mode` …), then the three routes. The book's sample shows only the three routes, and with slightly tighter spacing. The method, path, and handler on each route match.
 - **`bogie db:prepare`** logs `database created` when `depot_development` does not exist yet. The book says you will most likely see `database already exists`, because Docker's `POSTGRES_DB` creates it before Bogie runs. That is the Docker path. A Postgres that has not pre-created the database gets `database created`.
 - **The migration file's column alignment** is whatever `bogie g model` wrote. The SQL matches the listing; the spaces used to line the types up do not. `\d products` still matches the book.
-- **The migration filename** in the Chapter 3 listing is `20261031071211_create_products.sql`. A fresh `bogie g model` writes a new timestamp. This repo keeps the generated name. The chapter already says the timestamp will differ.
+- **The migration filename** in the Chapter 3 listing is `20261031071211_create_products.sql`. This repo now uses that name. A fresh `bogie g model` writes a new timestamp, so a reader who generates the app themselves will still see a different name.
 - **A missing product photo** does what the chapter says. `index.html` and `product.html` set `img.src` to `image_url` and leave it there. Chrome shows the broken-image icon and the alt text (the product name). `naturalWidth` is 0. The card and the product page still render the name and the price. The pages do not hide the image or substitute a placeholder. With the `.webp` files in `public/images/products/`, the same pages show the pictures (HTTP 200, `image/webp`). A path that is not in `public/` is HTTP 404, `text/html` (the app's `404.html`), which is why the browser treats it as a broken image.
 
 ## Bogie v1.0.0 update (2026-11-14, 21-chapter layout)
