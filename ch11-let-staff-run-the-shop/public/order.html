@@ -103,7 +103,7 @@ function renderAccount() {
   const user = JSON.parse(localStorage.getItem(userKey) || "null");
   if (user) {
     let html = "";
-    if (user.staff) html += '<a href="/admin/products.html">Admin</a> ';
+    if (user.staff) html += '<a href="/admin/index.html">Admin</a> ';
     html += '<span class="muted">' + esc(user.email) + '</span> <a href="#" id="signout">Sign out</a>';
     el.innerHTML = html;
     document.getElementById("signout").addEventListener("click", (e) => {

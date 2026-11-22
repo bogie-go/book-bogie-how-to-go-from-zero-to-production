@@ -9,7 +9,7 @@
   <body>
     <div class="shell" id="shell" hidden>
       <aside class="sidebar">
-        <a class="brand" href="/admin/products.html">Bogie Depot<small>admin</small></a>
+        <a class="brand" href="/admin/index.html">Bogie Depot<small>admin</small></a>
         <nav id="admin-nav"></nav>
         <div class="who">
           <span id="admin-email"></span>
@@ -17,20 +17,20 @@
         </div>
       </aside>
       <main class="content">
-        <h1>Coupons</h1>
+        <div class="bar">
+          <h1 id="list-title">Coupons</h1>
+          <a class="btn primary" id="new-link" href="#">New</a>
+        </div>
         <p class="note" id="status">Loading...</p>
         <table id="list" hidden><thead></thead><tbody></tbody></table>
-        <h2 id="form-title">New</h2>
-        <form id="form" class="form"></form>
         <p class="err" id="message"></p>
       </main>
     </div>
     <p class="state" id="gate">Checking access&hellip;</p>
     <script src="/admin/admin.js"></script>
     <script>
-      const RES = {"slug": "coupons", "key": "coupons", "fields": [["code", "Code (upper case)", "text"], ["price_rule_id", "Price rule id", "number"]]};
       adminReady({ categories: false }).then((ok) => {
-        if (ok) adminResource(RES, { archive: false, productCategories: false });
+        if (ok) adminList(ADMIN_SECTIONS.coupons, {});
       });
     </script>
   </body>

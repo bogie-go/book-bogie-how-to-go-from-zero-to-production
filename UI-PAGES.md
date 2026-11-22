@@ -78,30 +78,31 @@ The shared script block now gets a guest token (`POST /guest_sessions`), keeps i
 | File | What it is | Status |
 | --- | --- | --- |
 | `admin/admin.css`, `admin/admin.js` | Shared sidebar layout (cream/red, dark mode) and the staff gate (`depot_token`, `/signin.html`, probe `GET /admin/products`). | NEW |
-| `admin/products.html` | Staff list/create/edit/delete for products (`/admin/products`), in the sidebar shell, list and New form on one page. | NEW |
-| `admin/price_rules.html` | Staff screen for sale rules (`/admin/price_rules`), same shell. | NEW |
-| `admin/coupons.html` | Staff screen for coupons (`/admin/coupons`), same shell. | NEW |
-| `cart.html`, `checkout.html`, `index.html`, `order.html`, `product.html`, `signin.html`, `signup.html` | Each gets an "Admin" link in the nav for staff, found by probing `GET /admin/products` once after sign-in. | CHANGED |
+| `admin/index.html` | Staff dashboard (counts for Products, Promotions, and Coupons). The shop's "Admin" link and the brand mark open `/admin/index.html` (`public/` serves no directory index, so `/admin/` itself is a 404). | NEW |
+| `admin/products.html`, `admin/product.html` | Products list (`New product`, Edit, Delete) and the separate new/edit form (`/admin/products`, form at `product.html?id=`). | NEW |
+| `admin/promotions.html`, `admin/promotion.html` | Promotions list and form. The API remains `/admin/price_rules`. | NEW |
+| `admin/coupons.html`, `admin/coupon.html` | Coupons list and form (`/admin/coupons`). | NEW |
+| `cart.html`, `checkout.html`, `index.html`, `order.html`, `product.html`, `signin.html`, `signup.html` | Each gets an "Admin" link in the nav for staff, found by probing `GET /admin/products` once after sign-in, pointing at `/admin/index.html`. | CHANGED |
 
-The admin pages share `admin.js` (a table and form driven by a `RES` config). The sidebar lists Products, Sales, and Coupons, plus Back to the shop. Also change `public/public.go` (see above).
+The admin pages share `admin.js`. The sidebar lists Products, Promotions, and Coupons, plus Back to the shop. Also change `public/public.go` (see above).
 
 ## Chapter 12: Archive, Don't Delete (`ch12-archive-dont-delete/public/`)
 
 | File | What it is | Status |
 | --- | --- | --- |
-| `admin/products.html` | Adds an Archive / Restore link per product (`POST /admin/products/:id/archive` or `/restore`); archived rows are dimmed. | CHANGED |
-| `admin/admin.js` | The shared resource helper gains the archive option (only products use it). | CHANGED |
-| `admin/price_rules.html`, `admin/coupons.html` | Same shell; no visible change besides sharing the updated `admin.js`. | CHANGED |
+| `admin/products.html` | Adds Archive / Restore on the list (`POST /admin/products/:id/archive` or `/restore`); archived rows are dimmed. | CHANGED |
+| `admin/admin.js` | The list helper gains the archive option (only products use it). | CHANGED |
+| `admin/index.html`, `admin/product.html`, `admin/promotions.html`, `admin/promotion.html`, `admin/coupons.html`, `admin/coupon.html` | Same shell; no visible change besides sharing the updated `admin.js`. | CHANGED |
 | `cart.html`, `checkout.html`, `index.html`, `order.html`, `product.html`, `signin.html`, `signup.html` | No change from Chapter 11. | same |
 
 ## Chapter 13: Organize the Catalog (`ch13-organize-the-catalog/public/`)
 
 | File | What it is | Status |
 | --- | --- | --- |
-| `admin/categories.html` | Staff screen for categories (`/admin/categories`), in the sidebar shell. | NEW |
-| `admin/products.html` | Adds category checkboxes saved with `PUT /admin/products/:id/categories`. They are disabled for an archived product. | CHANGED |
-| `admin/admin.js` | Sidebar gains a Categories link; the products helper gains the checkbox hooks. | CHANGED |
-| `admin/price_rules.html`, `admin/coupons.html` | Same shell, now with Categories in the sidebar. | CHANGED |
+| `admin/categories.html`, `admin/category.html` | Categories list and form (`/admin/categories`), with a Categories link in the sidebar. | NEW |
+| `admin/product.html` | Adds category checkboxes saved with `PUT /admin/products/:id/categories`. They are disabled for an archived product. | CHANGED |
+| `admin/admin.js` | Sidebar gains a Categories link; the product form gains the checkbox hooks. | CHANGED |
+| `admin/index.html`, `admin/products.html`, `admin/promotions.html`, `admin/promotion.html`, `admin/coupons.html`, `admin/coupon.html` | Same shell, now with Categories in the sidebar. The dashboard also counts categories. | CHANGED |
 | `index.html` | Category menu (`GET /categories`), `?category_id=` filter and paging (`?page=`). | CHANGED |
 | `cart.html`, `checkout.html`, `order.html`, `product.html`, `signin.html`, `signup.html` | One-line fix in `api()`: ignore the query string when deciding whether a path needs a token. | CHANGED |
 

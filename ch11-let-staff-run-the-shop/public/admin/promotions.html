@@ -3,13 +3,13 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sales - Bogie Depot Admin</title>
+    <title>Promotions - Bogie Depot Admin</title>
     <link rel="stylesheet" href="/admin/admin.css">
   </head>
   <body>
     <div class="shell" id="shell" hidden>
       <aside class="sidebar">
-        <a class="brand" href="/admin/products.html">Bogie Depot<small>admin</small></a>
+        <a class="brand" href="/admin/index.html">Bogie Depot<small>admin</small></a>
         <nav id="admin-nav"></nav>
         <div class="who">
           <span id="admin-email"></span>
@@ -17,20 +17,20 @@
         </div>
       </aside>
       <main class="content">
-        <h1>Sales</h1>
+        <div class="bar">
+          <h1 id="list-title">Promotions</h1>
+          <a class="btn primary" id="new-link" href="#">New</a>
+        </div>
         <p class="note" id="status">Loading...</p>
         <table id="list" hidden><thead></thead><tbody></tbody></table>
-        <h2 id="form-title">New</h2>
-        <form id="form" class="form"></form>
         <p class="err" id="message"></p>
       </main>
     </div>
     <p class="state" id="gate">Checking access&hellip;</p>
     <script src="/admin/admin.js"></script>
     <script>
-      const RES = {"slug": "price_rules", "key": "price_rules", "fields": [["name", "Name", "text"], ["kind", "Kind (percentage_discount, buy_x_get_y, minimum_purchase)", "text"], ["properties", "Properties (JSON)", "json"], ["priority", "Priority", "number"], ["starts_at", "Starts at", "datetime"], ["ends_at", "Ends at", "datetime"]]};
       adminReady({ categories: false }).then((ok) => {
-        if (ok) adminResource(RES, { archive: false, productCategories: false });
+        if (ok) adminList(ADMIN_SECTIONS.promotions, {});
       });
     </script>
   </body>
