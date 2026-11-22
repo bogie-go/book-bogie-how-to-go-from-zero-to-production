@@ -40,9 +40,10 @@ var _ = Describe("GET /cart", func() {
 				Status(http.StatusOK).
 				Contains(`"subtotal_cents":3600,"discount_cents":0,"total_cents":3600,` +
 					`"applied_rules":[{"name":"Keycaps: buy 2, get 1 free",` +
-					`"price_before_cents":3600,"price_after_cents":3600,"discount_cents":0}],` +
-					fmt.Sprintf(`"free_items":[{"product_id":%d,"name":"Bogie Keycap",`, keycapID) +
-					`"image_url":"/images/products/bogie-keycap.webp","quantity":1,"rule":"Keycaps: buy 2, get 1 free"}]`)
+					fmt.Sprintf(`"free_items":[{"product_id":%d,`, keycapID) +
+					`"name":"Bogie Keycap",` +
+					`"image_url":"/images/products/bogie-keycap.webp",` +
+					`"quantity":1}]}]`)
 		})
 	})
 
@@ -63,7 +64,9 @@ var _ = Describe("GET /cart", func() {
 		It("still answers, with the working rules applied", func() {
 			app.Get("/cart").As("guest:1").Do().
 				Status(http.StatusOK).
-				Contains(`"applied_rules":[{"name":"10% off","price_before_cents":1000,"price_after_cents":900,"discount_cents":100}]`)
+				Contains(`"applied_rules":[{"name":"10% off",` +
+					`"price":{"before_cents":1000,"after_cents":900,` +
+					`"discount_cents":100}}]`)
 		})
 	})
 })

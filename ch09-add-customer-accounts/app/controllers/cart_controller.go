@@ -16,7 +16,9 @@ import (
 // cartReader is what every cart response needs from the store.
 type cartReader interface {
 	CartContents(ctx context.Context, cartID int64) ([]models.CartLine, error)
-	ListActivePriceRules(ctx context.Context) (rules []models.Rule, skipped []error, err error)
+	ListActivePriceRules(ctx context.Context) (
+		rules []models.Rule, skipped []error, err error,
+	)
 }
 
 type cartStore interface {
@@ -79,7 +81,8 @@ func respondWithCart(c *gin.Context, store cartReader, log *slog.Logger, cartID 
 		return
 	}
 	for _, s := range skipped {
-		log.WarnContext(ctx, "cart: skipped a price rule", "err", s, "request_id", c.GetString("request_id"))
+		log.WarnContext(ctx, "cart: skipped a price rule",
+			"err", s, "request_id", c.GetString("request_id"))
 	}
 	priced := models.PriceCart(lines, rules)
 	c.JSON(http.StatusOK, cartView(lines, priced))
@@ -93,7 +96,6 @@ func cartView(lines []models.CartLine, priced models.PricedCart) views.CartRespo
 		DiscountCents: priced.DiscountCents(),
 		TotalCents:    priced.TotalCents,
 		AppliedRules:  []views.AppliedRuleResponse{},
-		FreeItems:     []views.FreeItemResponse{},
 	}
 	for _, l := range lines {
 		resp.Items = append(resp.Items, views.CartLineResponse{
@@ -102,16 +104,26 @@ func cartView(lines []models.CartLine, priced models.PricedCart) views.CartRespo
 		})
 	}
 	for _, a := range priced.Applied {
-		resp.AppliedRules = append(resp.AppliedRules, views.AppliedRuleResponse{
-			Name:             a.Name,
-			PriceBeforeCents: a.BeforeCents,
-			PriceAfterCents:  a.AfterCents,
-			DiscountCents:    a.BeforeCents - a.AfterCents,
-		})
+		resp.AppliedRules = append(resp.AppliedRules, appliedRuleView(a))
 	}
-	for _, f := range priced.FreeItems {
+	return resp
+}
+
+// appliedRuleView turns one applied rule into its JSON, with only its
+// effect.
+func appliedRuleView(a models.AppliedRule) views.AppliedRuleResponse {
+	resp := views.AppliedRuleResponse{Name: a.Name}
+	if a.Price != nil {
+		resp.Price = &views.PriceStepResponse{
+			BeforeCents:   a.Price.BeforeCents,
+			AfterCents:    a.Price.AfterCents,
+			DiscountCents: a.Price.BeforeCents - a.Price.AfterCents,
+		}
+	}
+	for _, f := range a.FreeItems {
 		resp.FreeItems = append(resp.FreeItems, views.FreeItemResponse{
-			ProductID: f.ProductID, Name: f.Name, ImageUrl: f.ImageUrl, Quantity: f.Quantity, Rule: f.Rule,
+			ProductID: f.ProductID, Name: f.Name,
+			ImageUrl: f.ImageUrl, Quantity: f.Quantity,
 		})
 	}
 	return resp

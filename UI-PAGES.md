@@ -51,7 +51,7 @@ The shared script block now gets a guest token (`POST /guest_sessions`), keeps i
 
 | File | What it is | Status |
 | --- | --- | --- |
-| `cart.html` | Shows the free items from `free_items` below the customer's lines ("Free", with `free with "<rule>"`), then Subtotal, one row per applied rule (`$50.00 → $40.00`, from `price_before_cents` and `price_after_cents`), and Total. | CHANGED |
+| `cart.html` | Shows the free items from each applied rule's `free_items` below the customer's lines ("Free", with `free with "<rule name>"`), then Subtotal, one row per applied rule that has a `price` (`$50.00 → $40.00`, from `price.before_cents` and `price.after_cents`), and Total. | CHANGED |
 | `index.html`, `product.html` | No change from Chapter 7. | same |
 
 ## Chapter 9: Add Customer Accounts (`ch09-add-customer-accounts/public/`)
