@@ -35,9 +35,10 @@ func (s *Store) PlaceOrder(ctx context.Context, userID, cartID int64, rules []mo
 		}
 
 		priced := models.PriceCart(lines, rules)
+		free := priced.FreeItems()
 
 		byProduct := slices.Clone(lines)
-		for _, f := range priced.FreeItems {
+		for _, f := range free {
 			byProduct = append(byProduct, models.CartLine{ProductID: f.ProductID, Name: f.Name, Quantity: f.Quantity})
 		}
 		slices.SortFunc(byProduct, func(a, b models.CartLine) int { return cmp.Compare(a.ProductID, b.ProductID) })
@@ -67,11 +68,11 @@ func (s *Store) PlaceOrder(ctx context.Context, userID, cartID int64, rules []mo
 		}
 		order = orderFromRow(row)
 
-		items := make([]models.OrderItem, 0, len(lines)+len(priced.FreeItems))
+		items := make([]models.OrderItem, 0, len(lines)+len(free))
 		for _, l := range lines {
 			items = append(items, models.OrderItem{OrderID: order.ID, ProductID: l.ProductID, Name: l.Name, Quantity: l.Quantity, UnitPriceCents: l.PriceCents})
 		}
-		for _, f := range priced.FreeItems {
+		for _, f := range free {
 			items = append(items, models.OrderItem{OrderID: order.ID, ProductID: f.ProductID, Name: f.Name, Quantity: f.Quantity, UnitPriceCents: 0})
 		}
 		for _, item := range items {

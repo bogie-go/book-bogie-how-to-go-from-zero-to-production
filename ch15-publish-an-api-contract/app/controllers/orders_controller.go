@@ -22,7 +22,9 @@ import (
 
 type ordersStore interface {
 	FindOrCreateCartByToken(ctx context.Context, token string) (models.Cart, error)
-	ListActivePriceRules(ctx context.Context) (rules []models.Rule, skipped []error, err error)
+	ListActivePriceRules(ctx context.Context) (
+		rules []models.Rule, skipped []error, err error,
+	)
 	CouponRule(ctx context.Context, code string) (models.Rule, error)
 	FindOrderForUser(ctx context.Context, id string, userID int64) (models.Order, error)
 	PlaceOrder(ctx context.Context, userID, cartID int64, rules []models.Rule, after adapter.AfterOrder) (models.Order, error)
@@ -99,7 +101,8 @@ func (ctl *OrdersController) Create(c *gin.Context) {
 		return
 	}
 	for _, s := range skipped {
-		ctl.Log.WarnContext(ctx, "orders: skipped a price rule", "err", s, "request_id", c.GetString("request_id"))
+		ctl.Log.WarnContext(ctx, "orders: skipped a price rule",
+			"err", s, "request_id", c.GetString("request_id"))
 	}
 	if code := models.NormalizeCouponCode(req.CouponCode); code != "" {
 		rule, err := ctl.Store.CouponRule(ctx, code)

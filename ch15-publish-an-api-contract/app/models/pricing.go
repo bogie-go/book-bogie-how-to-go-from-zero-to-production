@@ -7,20 +7,27 @@ import (
 )
 
 // PriceContext is what flows through the pricing pipeline: the cart's lines,
-// what they cost before any rule, the price so far, and what the rules have
-// done so far: the steps they recorded, and the items they gave away.
+// what they cost before any rule, the price so far, and what each rule has
+// done so far.
 type PriceContext struct {
 	Lines         []CartLine
 	OriginalCents int32
 	CurrentCents  int32
 	AppliedRules  []AppliedRule
-	FreeItems     []FreeItem
 }
 
-// AppliedRule is what one rule did: its name, and the price before and after
-// it.
+// AppliedRule is what one rule did: a step in the price, free items,
+// or both.
 type AppliedRule struct {
-	Name        string
+	Name string
+	// Price is the rule's step in the price, or nil if it didn't change it.
+	Price *PriceStep
+	// FreeItems is what the rule gave away, if anything.
+	FreeItems []FreeItem
+}
+
+// PriceStep is the price before and after one rule.
+type PriceStep struct {
 	BeforeCents int32
 	AfterCents  int32
 }
@@ -31,8 +38,6 @@ type FreeItem struct {
 	Name      string
 	ImageUrl  string
 	Quantity  int32
-	// Rule is the name of the rule that gave it.
-	Rule string
 }
 
 // RuleInfo is what every kind of rule carries from its row.
@@ -76,8 +81,10 @@ func (r PercentageDiscount) Apply(ctx PriceContext) PriceContext {
 	}
 	before := ctx.CurrentCents
 	ctx.CurrentCents -= discount
-	ctx.AppliedRules = append(ctx.AppliedRules,
-		AppliedRule{Name: r.Name, BeforeCents: before, AfterCents: ctx.CurrentCents})
+	ctx.AppliedRules = append(ctx.AppliedRules, AppliedRule{
+		Name:  r.Name,
+		Price: &PriceStep{BeforeCents: before, AfterCents: ctx.CurrentCents},
+	})
 	return ctx
 }
 
@@ -89,8 +96,8 @@ func (r PercentageDiscount) Validate() error {
 }
 
 // BuyXGetY gives items away: for every Buy of one product in the cart, the
-// customer gets Free more of it, at no cost. It adds them to the free items,
-// and leaves the price alone.
+// customer gets Free more of it, at no cost. It records them on its
+// AppliedRule as FreeItems, and leaves the price alone.
 type BuyXGetY struct {
 	RuleInfo  `json:"-"`
 	ProductID int64 `json:"product_id"`
@@ -107,12 +114,13 @@ func (r BuyXGetY) Apply(ctx PriceContext) PriceContext {
 		if free == 0 {
 			return ctx
 		}
-		ctx.FreeItems = append(ctx.FreeItems, FreeItem{
-			ProductID: l.ProductID, Name: l.Name, ImageUrl: l.ImageUrl,
-			Quantity: free, Rule: r.Name,
+		ctx.AppliedRules = append(ctx.AppliedRules, AppliedRule{
+			Name: r.Name,
+			FreeItems: []FreeItem{{
+				ProductID: l.ProductID, Name: l.Name,
+				ImageUrl: l.ImageUrl, Quantity: free,
+			}},
 		})
-		ctx.AppliedRules = append(ctx.AppliedRules,
-			AppliedRule{Name: r.Name, BeforeCents: ctx.CurrentCents, AfterCents: ctx.CurrentCents})
 		return ctx
 	}
 	return ctx
@@ -140,8 +148,10 @@ func (r MinimumPurchase) Apply(ctx PriceContext) PriceContext {
 	}
 	before := ctx.CurrentCents
 	ctx.CurrentCents -= discount
-	ctx.AppliedRules = append(ctx.AppliedRules,
-		AppliedRule{Name: r.Name, BeforeCents: before, AfterCents: ctx.CurrentCents})
+	ctx.AppliedRules = append(ctx.AppliedRules, AppliedRule{
+		Name:  r.Name,
+		Price: &PriceStep{BeforeCents: before, AfterCents: ctx.CurrentCents},
+	})
 	return ctx
 }
 
@@ -185,18 +195,25 @@ func decodeStrict(data []byte, v any) error {
 	return dec.Decode(v)
 }
 
-// PricedCart is a cart's price, worked out rule by rule, and what the rules
-// gave away.
+// PricedCart is a cart's price, worked out rule by rule.
 type PricedCart struct {
 	SubtotalCents int32
 	TotalCents    int32
 	Applied       []AppliedRule
-	FreeItems     []FreeItem
 }
 
 // DiscountCents is everything the rules took off, together.
 func (p PricedCart) DiscountCents() int32 {
 	return p.SubtotalCents - p.TotalCents
+}
+
+// FreeItems is everything the rules gave away, in the order they ran.
+func (p PricedCart) FreeItems() []FreeItem {
+	var items []FreeItem
+	for _, a := range p.Applied {
+		items = append(items, a.FreeItems...)
+	}
+	return items
 }
 
 // PriceCart passes a cart through its rules, in order: each rule starts from
@@ -211,6 +228,5 @@ func PriceCart(lines []CartLine, rules []Rule) PricedCart {
 		SubtotalCents: ctx.OriginalCents,
 		TotalCents:    ctx.CurrentCents,
 		Applied:       ctx.AppliedRules,
-		FreeItems:     ctx.FreeItems,
 	}
 }

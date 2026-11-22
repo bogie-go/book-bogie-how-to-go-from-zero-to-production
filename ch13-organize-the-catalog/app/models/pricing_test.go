@@ -23,7 +23,7 @@ var _ = Describe("PercentageDiscount", func() {
 var _ = Describe("BuyXGetY", func() {
 	// The cart holds keycaps (product 5) and four stickers (product 1).
 	DescribeTable("gives free keycaps, and leaves the price alone",
-		func(keycaps int32, wantFree []models.FreeItem) {
+		func(keycaps int32, want []models.AppliedRule) {
 			ctx := models.PriceContext{
 				Lines: []models.CartLine{
 					{ProductID: 5, Name: "Keycap", PriceCents: 1800, Quantity: keycaps},
@@ -33,18 +33,27 @@ var _ = Describe("BuyXGetY", func() {
 			}
 			rule := models.BuyXGetY{ProductID: 5, Buy: 2, Free: 1}
 			after := rule.Apply(ctx)
-			Expect(after.FreeItems).To(Equal(wantFree))
+			Expect(after.AppliedRules).To(Equal(want))
 			Expect(after.CurrentCents).To(Equal(int32(20000)))
 		},
-		Entry("one keycap: none free yet", int32(1), []models.FreeItem(nil)),
-		Entry("two keycaps: one free", int32(2), []models.FreeItem{{ProductID: 5, Name: "Keycap", Quantity: 1}}),
-		Entry("three keycaps: still one free", int32(3), []models.FreeItem{{ProductID: 5, Name: "Keycap", Quantity: 1}}),
-		Entry("four keycaps: two free", int32(4), []models.FreeItem{{ProductID: 5, Name: "Keycap", Quantity: 2}}),
+		Entry("one keycap: none free yet", int32(1), []models.AppliedRule(nil)),
+		Entry("two keycaps: one free", int32(2), keycapsGiven(1)),
+		Entry("three keycaps: still one free", int32(3), keycapsGiven(1)),
+		Entry("four keycaps: two free", int32(4), keycapsGiven(2)),
 	)
 })
 
+// keycapsGiven is what the unnamed keycap rule records when it gives n.
+func keycapsGiven(n int32) []models.AppliedRule {
+	free := []models.FreeItem{{ProductID: 5, Name: "Keycap", Quantity: n}}
+	return []models.AppliedRule{{FreeItems: free}}
+}
+
 var _ = Describe("PriceCart", func() {
 	named := func(name string) models.RuleInfo { return models.RuleInfo{Name: name} }
+	step := func(before, after int32) *models.PriceStep {
+		return &models.PriceStep{BeforeCents: before, AfterCents: after}
+	}
 	twentyOff := models.PercentageDiscount{RuleInfo: named("20% off"), Percentage: 20}
 	tenOff := models.PercentageDiscount{RuleInfo: named("10% off"), Percentage: 10}
 	keycapFree := models.BuyXGetY{RuleInfo: named("Keycaps"), ProductID: 5, Buy: 2, Free: 1}
@@ -53,20 +62,21 @@ var _ = Describe("PriceCart", func() {
 	It("passes the price from rule to rule, and records each step", func() {
 		priced := models.PriceCart(keycaps, []models.Rule{twentyOff, tenOff})
 		Expect(priced.Applied).To(Equal([]models.AppliedRule{
-			{Name: "20% off", BeforeCents: 5400, AfterCents: 4320},
-			{Name: "10% off", BeforeCents: 4320, AfterCents: 3888},
+			{Name: "20% off", Price: step(5400, 4320)},
+			{Name: "10% off", Price: step(4320, 3888)},
 		}))
 		Expect(priced.TotalCents).To(Equal(int32(3888)))
 		Expect(priced.DiscountCents()).To(Equal(int32(1512)))
 	})
 
-	It("gives free items, named after their rule, at no cost", func() {
+	It("records each rule's own effect: a price step, or free items", func() {
 		priced := models.PriceCart(keycaps, []models.Rule{twentyOff, keycapFree})
-		Expect(priced.FreeItems).To(Equal([]models.FreeItem{{ProductID: 5, Name: "Keycap", Quantity: 1, Rule: "Keycaps"}}))
+		free := []models.FreeItem{{ProductID: 5, Name: "Keycap", Quantity: 1}}
 		Expect(priced.Applied).To(Equal([]models.AppliedRule{
-			{Name: "20% off", BeforeCents: 5400, AfterCents: 4320},
-			{Name: "Keycaps", BeforeCents: 4320, AfterCents: 4320},
+			{Name: "20% off", Price: step(5400, 4320)},
+			{Name: "Keycaps", FreeItems: free},
 		}))
+		Expect(priced.FreeItems()).To(Equal(free))
 	})
 
 	It("gives the same price whichever runs first, a free item or a discount", func() {
@@ -79,8 +89,10 @@ var _ = Describe("PriceCart", func() {
 	It("records only the rules that did something", func() {
 		stickers := []models.CartLine{{ProductID: 1, PriceCents: 300, Quantity: 2}}
 		priced := models.PriceCart(stickers, []models.Rule{twentyOff, keycapFree})
-		Expect(priced.Applied).To(Equal([]models.AppliedRule{{Name: "20% off", BeforeCents: 600, AfterCents: 480}}))
-		Expect(priced.FreeItems).To(BeEmpty())
+		Expect(priced.Applied).To(Equal([]models.AppliedRule{
+			{Name: "20% off", Price: step(600, 480)},
+		}))
+		Expect(priced.FreeItems()).To(BeEmpty())
 	})
 
 	It("gives a different price when two discounts run in another order", func() {

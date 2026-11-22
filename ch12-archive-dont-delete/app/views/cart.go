@@ -11,13 +11,19 @@ type CartLineResponse struct {
 	SubtotalCents  int32  `json:"subtotal_cents"`
 }
 
-// AppliedRuleResponse is one step of the cart's pricing: a rule, and the
-// price before and after it.
+// AppliedRuleResponse is one rule the cart used, with its own effect:
+// a step in the price, free items, or both.
 type AppliedRuleResponse struct {
-	Name             string `json:"name"`
-	PriceBeforeCents int32  `json:"price_before_cents"`
-	PriceAfterCents  int32  `json:"price_after_cents"`
-	DiscountCents    int32  `json:"discount_cents"`
+	Name      string             `json:"name"`
+	Price     *PriceStepResponse `json:"price,omitempty"`
+	FreeItems []FreeItemResponse `json:"free_items,omitempty"`
+}
+
+// PriceStepResponse is the price before and after one rule.
+type PriceStepResponse struct {
+	BeforeCents   int32 `json:"before_cents"`
+	AfterCents    int32 `json:"after_cents"`
+	DiscountCents int32 `json:"discount_cents"`
 }
 
 // FreeItemResponse is an item a rule added to the cart at no cost.
@@ -26,7 +32,6 @@ type FreeItemResponse struct {
 	Name      string `json:"name"`
 	ImageUrl  string `json:"image_url"`
 	Quantity  int32  `json:"quantity"`
-	Rule      string `json:"rule"`
 }
 
 // CartResponse is the whole cart: every change to it answers with this.
@@ -36,7 +41,6 @@ type CartResponse struct {
 	DiscountCents int32                 `json:"discount_cents"`
 	TotalCents    int32                 `json:"total_cents"`
 	AppliedRules  []AppliedRuleResponse `json:"applied_rules"`
-	FreeItems     []FreeItemResponse    `json:"free_items"`
 }
 
 // AddCartItemRequest is the body of POST /cart_items.

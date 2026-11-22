@@ -110,7 +110,7 @@ function renderAccount() {
   const user = JSON.parse(localStorage.getItem(userKey) || "null");
   if (user) {
     let html = "";
-    if (user.staff) html += '<a href="/admin/products.html">Admin</a> ';
+    if (user.staff) html += '<a href="/admin/index.html">Admin</a> ';
     html += '<span class="muted">' + esc(user.email) + '</span> <a href="#" id="signout">Sign out</a>';
     el.innerHTML = html;
     document.getElementById("signout").addEventListener("click", (e) => {
@@ -157,16 +157,18 @@ function render(cart) {
   }
   // Free items: what the rules gave away, below the items the customer chose.
   // The customer doesn't add or remove them: they follow from the cart.
-  for (const f of cart.free_items || []) {
+  for (const r of cart.applied_rules || []) {
+    for (const f of r.free_items || []) {
     const tr = document.createElement("tr");
     tr.className = "free";
     tr.innerHTML = '<td><img alt="" width="48"></td><td class="item"><span></span><span class="rule"></span></td>' +
       '<td class="price">Free</td><td></td><td>$0.00</td><td></td>';
     tr.querySelector("img").src = f.image_url;
     tr.querySelector(".item span").textContent = f.name;
-    tr.querySelector(".rule").textContent = 'free with "' + f.rule + '"';
+    tr.querySelector(".rule").textContent = 'free with "' + r.name + '"';
     tr.querySelectorAll("td")[3].textContent = f.quantity;
     body.appendChild(tr);
+    }
   }
   renderSummary(cart);
   const checkout = document.getElementById("checkout");
@@ -187,10 +189,10 @@ function renderSummary(cart) {
     cells[1].textContent = value;
     summary.appendChild(div);
   };
-  const steps = (cart.applied_rules || []).filter(r => r.discount_cents > 0);
+  const steps = (cart.applied_rules || []).filter(r => r.price && r.price.discount_cents > 0);
   if (steps.length > 0) row("Subtotal", dollars(cart.subtotal_cents));
   for (const r of steps) {
-    row(r.name, dollars(r.price_before_cents) + " \u2192 " + dollars(r.price_after_cents));
+    row(r.name, dollars(r.price.before_cents) + " \u2192 " + dollars(r.price.after_cents));
   }
   row("Total", dollars(cart.total_cents), "total");
 }

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Coupon - Bogie Depot Admin</title>
+    <link rel="stylesheet" href="/admin/admin.css">
+  </head>
+  <body>
+    <div class="shell" id="shell" hidden>
+      <aside class="sidebar">
+        <a class="brand" href="/admin/index.html">Bogie Depot<small>admin</small></a>
+        <nav id="admin-nav"></nav>
+        <div class="who">
+          <span id="admin-email"></span>
+          <div><button type="button" id="signout">Sign out</button></div>
+        </div>
+      </aside>
+      <main class="content">
+        <a class="back" id="back-link" href="/admin/coupons.html">&larr; Coupons</a>
+        <h1 id="form-title">Coupon</h1>
+        <p class="state" id="missing" hidden></p>
+        <form id="form" class="form"></form>
+        <p class="err" id="message"></p>
+      </main>
+    </div>
+    <p class="state" id="gate">Checking access&hellip;</p>
+    <script src="/admin/admin.js"></script>
+    <script>
+      adminReady({ categories: true }).then((ok) => {
+        if (ok) adminForm(ADMIN_SECTIONS.coupons, {});
+      });
+    </script>
+  </body>
+</html>

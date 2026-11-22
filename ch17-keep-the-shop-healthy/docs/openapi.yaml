@@ -300,35 +300,51 @@ components:
     AppliedRule:
       type: object
       additionalProperties: false
-      required: [name, price_before_cents, price_after_cents, discount_cents]
+      required: [name]
       properties:
         name: { type: string }
-        price_before_cents: { type: integer, minimum: 0 }
-        price_after_cents: { type: integer, minimum: 0 }
-        discount_cents: { type: integer, minimum: 0 }
+        price: { $ref: "#/components/schemas/PriceStep" }
+        free_items:
+          type: array
+          minItems: 1
+          items: { $ref: "#/components/schemas/FreeItem" }
+
+    PriceStep:
+      type: object
+      additionalProperties: false
+      required: [before_cents, after_cents, discount_cents]
+      properties:
+        before_cents: { type: integer, minimum: 0 }
+        after_cents: { type: integer, minimum: 0 }
+        discount_cents: { type: integer, minimum: 1 }
 
     FreeItem:
       type: object
       additionalProperties: false
-      required: [product_id, name, image_url, quantity, rule]
+      required: [product_id, name, image_url, quantity]
       properties:
         product_id: { type: integer }
         name: { type: string }
         image_url: { type: string }
         quantity: { type: integer, minimum: 1 }
-        rule: { type: string }
 
     Cart:
       type: object
       additionalProperties: false
-      required: [items, subtotal_cents, discount_cents, total_cents, applied_rules, free_items]
+      required:
+        - items
+        - subtotal_cents
+        - discount_cents
+        - total_cents
+        - applied_rules
       properties:
         items: { type: array, items: { $ref: "#/components/schemas/CartLine" } }
         subtotal_cents: { type: integer, minimum: 0 }
         discount_cents: { type: integer, minimum: 0 }
         total_cents: { type: integer, minimum: 0 }
-        applied_rules: { type: array, items: { $ref: "#/components/schemas/AppliedRule" } }
-        free_items: { type: array, items: { $ref: "#/components/schemas/FreeItem" } }
+        applied_rules:
+          type: array
+          items: { $ref: "#/components/schemas/AppliedRule" }
 
     PlaceOrder:
       type: object

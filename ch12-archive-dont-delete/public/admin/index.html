@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard - Bogie Depot Admin</title>
+    <link rel="stylesheet" href="/admin/admin.css">
+  </head>
+  <body>
+    <div class="shell" id="shell" hidden>
+      <aside class="sidebar">
+        <a class="brand" href="/admin/index.html">Bogie Depot<small>admin</small></a>
+        <nav id="admin-nav"></nav>
+        <div class="who">
+          <span id="admin-email"></span>
+          <div><button type="button" id="signout">Sign out</button></div>
+        </div>
+      </aside>
+      <main class="content">
+        <h1>Dashboard</h1>
+        <p class="note" id="status">Manage the shop.</p>
+        <div class="cards" id="cards"></div>
+      </main>
+    </div>
+    <p class="state" id="gate">Checking access&hellip;</p>
+    <script src="/admin/admin.js"></script>
+    <script>
+      adminReady({ categories: false }).then((ok) => {
+        if (ok) adminDashboard({ categories: false });
+      });
+    </script>
+  </body>
+</html>
