@@ -10,7 +10,7 @@ Chapters 4 and 5 do not change the pages either. Chapter 4's folder still has `i
 
 **Status key:** NEW = first appears this chapter. CHANGED = differs from the previous chapter's copy. same = byte-identical to the previous chapter (no need to print again).
 
-**Embed pattern.** Bogie serves only what `public/public.go` embeds. Chapters 3–10 use the generated `//go:embed *.html images`. From Chapter 11 on, change it to `//go:embed *.html admin/*.html images` (otherwise `/admin/*.html` is a 404). See `BOOK-ISSUES.md`.
+**Embed pattern.** Bogie serves only what `public/public.go` embeds. Chapters 3–10 use the generated `//go:embed *.html images`. From Chapter 11 on, change it to `//go:embed *.html admin/* images` (otherwise `/admin/*.html` is a 404, and the shared `admin.css` and `admin.js` would be missing too). See `BOOK-ISSUES.md`.
 
 ## Chapter 3: Show the Catalog (`ch03-show-the-catalog/public/`)
 
@@ -77,28 +77,31 @@ The shared script block now gets a guest token (`POST /guest_sessions`), keeps i
 
 | File | What it is | Status |
 | --- | --- | --- |
-| `admin/products.html` | Staff list/create/edit/delete for products (`/admin/products`). | NEW |
-| `admin/price_rules.html` | Staff screen for sale rules (`/admin/price_rules`). | NEW |
-| `admin/coupons.html` | Staff screen for coupons (`/admin/coupons`). | NEW |
+| `admin/admin.css`, `admin/admin.js` | Shared sidebar layout (cream/red, dark mode) and the staff gate (`depot_token`, `/signin.html`, probe `GET /admin/products`). | NEW |
+| `admin/products.html` | Staff list/create/edit/delete for products (`/admin/products`), in the sidebar shell, list and New form on one page. | NEW |
+| `admin/price_rules.html` | Staff screen for sale rules (`/admin/price_rules`), same shell. | NEW |
+| `admin/coupons.html` | Staff screen for coupons (`/admin/coupons`), same shell. | NEW |
 | `cart.html`, `checkout.html`, `index.html`, `order.html`, `product.html`, `signin.html`, `signup.html` | Each gets an "Admin" link in the nav for staff, found by probing `GET /admin/products` once after sign-in. | CHANGED |
 
-The three admin pages share one script (a table driven by a `RES` config for slug and fields). Also change `public/public.go` (see above).
+The admin pages share `admin.js` (a table and form driven by a `RES` config). The sidebar lists Products, Sales, and Coupons, plus Back to the shop. Also change `public/public.go` (see above).
 
 ## Chapter 12: Archive, Don't Delete (`ch12-archive-dont-delete/public/`)
 
 | File | What it is | Status |
 | --- | --- | --- |
 | `admin/products.html` | Adds an Archive / Restore link per product (`POST /admin/products/:id/archive` or `/restore`); archived rows are dimmed. | CHANGED |
-| `admin/price_rules.html`, `admin/coupons.html` | Same shared script, so the file changes, but the archive code does nothing for them (it only runs when `RES.slug === "products"`). | CHANGED |
+| `admin/admin.js` | The shared resource helper gains the archive option (only products use it). | CHANGED |
+| `admin/price_rules.html`, `admin/coupons.html` | Same shell; no visible change besides sharing the updated `admin.js`. | CHANGED |
 | `cart.html`, `checkout.html`, `index.html`, `order.html`, `product.html`, `signin.html`, `signup.html` | No change from Chapter 11. | same |
 
 ## Chapter 13: Organize the Catalog (`ch13-organize-the-catalog/public/`)
 
 | File | What it is | Status |
 | --- | --- | --- |
-| `admin/categories.html` | Staff screen for categories (`/admin/categories`). | NEW |
+| `admin/categories.html` | Staff screen for categories (`/admin/categories`), in the sidebar shell. | NEW |
 | `admin/products.html` | Adds category checkboxes saved with `PUT /admin/products/:id/categories`. They are disabled for an archived product. | CHANGED |
-| `admin/price_rules.html`, `admin/coupons.html` | Shared admin script gets the `onEdit`/`saveCats` hooks and a Categories nav link. | CHANGED |
+| `admin/admin.js` | Sidebar gains a Categories link; the products helper gains the checkbox hooks. | CHANGED |
+| `admin/price_rules.html`, `admin/coupons.html` | Same shell, now with Categories in the sidebar. | CHANGED |
 | `index.html` | Category menu (`GET /categories`), `?category_id=` filter and paging (`?page=`). | CHANGED |
 | `cart.html`, `checkout.html`, `order.html`, `product.html`, `signin.html`, `signup.html` | One-line fix in `api()`: ignore the query string when deciding whether a path needs a token. | CHANGED |
 
