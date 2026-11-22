@@ -31,5 +31,5 @@ make test
 - Set a token secret of at least 32 bytes in the environment when running without credentials: `export TOKEN_SECRET=$(openssl rand -hex 32)`. The tests mint their own tokens and don't need it.
 - The "Someone else's cart item" specs (`guest:alice` / `guest:mallory`) and the scoped queries `GetCartItemInCart` / `DeleteCartItemInCart` are the bug and fix from the chapter.
 - `public/*.html` are the updated pages the chapter says to copy from the companion repo (this chapter's `public/`): they get a guest token once, keep it in local storage and send it with each cart request. The book does not print them, so they are written for this repo.
-- The cart migrations use the same timestamps as Chapter 6 and Chapter 8 (`20261104094512`, `20261104094513`, `20261104094524`), after Chapter 4's `create_products`. The book prints `20261031071536`, `20261031071537`, and `20261031071548`. The SQL is the book's.
+- The cart migrations use the same filenames as Chapter 6, matching the book's listings: `20261031071536_create_carts.sql`, `20261031071537_create_cart_items.sql`, and `20261031071548_add_unique_product_per_cart.sql`.
 - `bin/ci` passes.

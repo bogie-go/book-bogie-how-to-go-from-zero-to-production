@@ -28,4 +28,4 @@ bogie test
 
 - This folder is a complete Bogie app, generated with `bogie new depot`, then `bogie g model product name description:text price_cents:integer stock:integer image_url` and `bogie g scaffold_controller products --only index,show`. The generated `README.md` of the app is kept as `README-bogie.md`.
 - Credentials are not committed: no `config/master.key` and no `config/credentials.yml.enc`. Without them the app reads its settings from environment variables and its built-in development defaults, so it runs as is. Run `make credentials` to create your own encrypted settings.
-- The migration filename's timestamp is whatever `bogie g model` wrote. The book's listing uses a different timestamp, and the chapter says yours will differ.
+- The migration filename matches the book's listing: `20261031071211_create_products.sql`. A fresh `bogie g model` writes a new timestamp, so if you generate the app yourself, yours will differ.
