@@ -25,7 +25,7 @@ make test
 
 ## If you're following along
 
-When you reach "The Controller" (p.211), keep the generated `Show` stub until "Your Receipt, and Nobody Else's" (p.226). Replacing `Show` earlier leaves `SetupRoutes` referring to a method that isn't there yet, and the app won't compile.
+When you reach "The Controller" (p.197), keep the generated `Show` stub until "Your Receipt, and Nobody Else's" (p.212). Replacing `Show` earlier leaves `SetupRoutes` referring to a method that isn't there yet, and the app won't compile.
 
 ## Notes
 

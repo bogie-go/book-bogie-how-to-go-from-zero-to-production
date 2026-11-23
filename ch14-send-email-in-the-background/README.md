@@ -25,7 +25,7 @@ make test
 
 ## If you're following along
 
-- After the first `bogie g job` ("Generate a Job", p.288; "Watch It Arrive", p.302), open `main.go` and confirm the commands map includes `"worker": runWorker,`. If it's missing, add that line above `// bogie:commands`. This folder already has it. Without it, `bogie worker` prints `unknown command "worker"; serving instead` and tries to bind :8080.
+- After the first `bogie g job` ("Generate a Job", p.274; "Watch It Arrive", p.288), open `main.go` and confirm the commands map includes `"worker": runWorker,`. If it's missing, add that line above `// bogie:commands`. This folder already has it. Without it, `bogie worker` prints `unknown command "worker"; serving instead` and tries to bind :8080.
 - If `bogie g config smtp` skipped writing development credentials (no `config/master.key`), set `SMTP_ADDRESS`, `SMTP_PORT`, and `SMTP_FROM`, or use this folder's development defaults in `SmtpConfig.defaults` (see Notes below).
 
 ## Notes
