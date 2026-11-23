@@ -22,6 +22,11 @@ DEPOT_ENV=test bogie db:prepare      # once, creates the test database
 make test
 ```
 
+
+## If you're following along
+
+When you reach "The Controller" (p.211), keep the generated `Show` stub until "Your Receipt, and Nobody Else's" (p.226). Replacing `Show` earlier leaves `SetupRoutes` referring to a method that isn't there yet, and the app won't compile.
+
 ## Notes
 
 - This folder is a complete Bogie app, a snapshot of Bogie Depot at the end of this chapter. The generated `README.md` of the app is kept as `README-bogie.md`.

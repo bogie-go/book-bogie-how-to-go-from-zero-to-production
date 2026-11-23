@@ -22,6 +22,12 @@ DEPOT_ENV=test bogie db:prepare      # once, creates the test database
 make test
 ```
 
+
+## If you're following along
+
+- In "Products in Many Categories" (p.265–266), stop `bogie s` before you run `bogie g model product_category` and edit the migration. The server applies new migrations as it reloads, so the unedited file can run first. If it already has, run `bogie db:rollback`, add `ON DELETE CASCADE` and the unique pair index, then `bogie db:migrate`.
+- In "Count with a LEFT JOIN" (p.277), the printed `Describe("GET /categories")` puts its `BeforeEach` at Describe level. If you keep the generated empty-list example in the same Describe, that setup will make it fail. Put the new examples in a `Context`, or replace the whole generated Describe.
+
 ## Notes
 
 - This folder is a complete Bogie app, a snapshot of Bogie Depot at the end of this chapter. The generated `README.md` of the app is kept as `README-bogie.md`.
