@@ -13,7 +13,7 @@ git clone git@github.com:bogie-go/book-bogie-how-to-go-from-zero-to-production.g
 cd book-bogie-how-to-go-from-zero-to-production/ch03-show-the-catalog
 ```
 
-Each folder holds the app (or the programs) as it stands at the end of that chapter, and its README says how to run it.
+Each folder holds the app (or the programs) as it stands at the end of that chapter, and its README says how to run it. If you're following along in the book, check that chapter's README for notes before you start.
 
 Chapters 1 and 3 through 17 are Bogie Depot, one snapshot per chapter, on Bogie v1.0.0. Chapter 2 is the Chapter 1 app plus `checkpoints/` for the scratch programs (the chapter deletes `scratch/` at the end). Chapters 5 through 7 and 9 through 17 continue that shop: tests, a cart, guest sessions, the sale from Chapter 8, accounts, orders, staff, archive, categories, background email, the API contract, deploy config, and `/status`. Chapters 12, 13, and 15 are complete apps on purpose: later chapters tell a reader who skipped them to start from those folders.
 
